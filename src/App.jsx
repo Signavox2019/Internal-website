@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoginPage from './components/LoginPage';
@@ -13,6 +13,7 @@ import ProfilePage from './components/ProfilePage';
 import SkillPath from './components/SkillPath';
 import LandingPage from './components/LandingPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import LoadingScreen from './components/LoadingScreen';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from '@mui/material';
 import InsurancePage from './components/InsurancePage';
@@ -33,6 +34,20 @@ const theme = createTheme({
 
 function App() {
   const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Ensure loading screen is shown for at least 3 seconds
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -117,9 +132,7 @@ function App() {
                 <SkillPath />
               </ProtectedRoute>
             } />
-            
           </Route>
-
 
           {/* Redirect root to login or welcome based on auth status */}
           <Route path="/" element={

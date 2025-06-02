@@ -18,6 +18,7 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
+    CircularProgress,
 } from '@mui/material';
 import {
     BarChart,
@@ -48,6 +49,7 @@ import {
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import BaseUrl from '../Api';
+import LoadingScreen from './LoadingScreen';
 
 const glowVariants = {
     initial: { opacity: 0.5 },
@@ -91,6 +93,7 @@ const WelcomePage = () => {
     const [ticketStats, setTicketStats] = useState(null);
     const [mobilityStats, setMobilityStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
     const [projects, setProjects] = useState([]);
     const [projectApplications, setProjectApplications] = useState([]);
     const [selectedYear, setSelectedYear] = useState(2025);
@@ -169,6 +172,10 @@ const WelcomePage = () => {
                 console.error('Error fetching data:', error);
             } finally {
                 setLoading(false);
+                // Ensure the loading screen shows for at least 3 seconds
+                setTimeout(() => {
+                    setInitialLoading(false);
+                }, 500);
             }
         };
 
@@ -252,6 +259,10 @@ const WelcomePage = () => {
             </CardContent>
         </Card>
     );
+
+    if (initialLoading) {
+        return <LoadingScreen />;
+    }
 
     return (
         <Box
@@ -628,38 +639,47 @@ const WelcomePage = () => {
                                     </IconButton>
                                 </Box>
                             </Box>
-                            <Box sx={{ flex: 1, width: '100%', minHeight: 0 }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={ticketYearlyStats?.data.map(item => ({
-                                            ...item,
-                                            month: new Date(2025, item.month - 1).toLocaleString('default', { month: 'short' })
-                                        })) || []}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-                                        <XAxis 
-                                            dataKey="month" 
-                                            tick={{ fill: '#666', fontSize: 12 }}
-                                            axisLine={{ stroke: '#ddd' }}
-                                        />
-                                        <YAxis
-                                            tick={{ fill: '#666', fontSize: 12 }}
-                                            axisLine={{ stroke: '#ddd' }}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                background: 'rgba(255,255,255,0.95)',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                                            }}
-                                        />
-                                        <Legend />
-                                        <Bar dataKey="Open" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                                        <Bar dataKey="Resolved" fill="#10b981" radius={[4, 4, 0, 0]} />
-                                        <Bar dataKey="Breached" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                            <Box sx={{ flex: 1, width: '100%', minHeight: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                {loading ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                        <CircularProgress sx={{ color: '#3b82f6' }} />
+                                        <Typography variant="body2" color="text.secondary">
+                                            Loading ticket statistics...
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={ticketYearlyStats?.data.map(item => ({
+                                                ...item,
+                                                month: new Date(2025, item.month - 1).toLocaleString('default', { month: 'short' })
+                                            })) || []}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                                            <XAxis 
+                                                dataKey="month" 
+                                                tick={{ fill: '#666', fontSize: 12 }}
+                                                axisLine={{ stroke: '#ddd' }}
+                                            />
+                                            <YAxis
+                                                tick={{ fill: '#666', fontSize: 12 }}
+                                                axisLine={{ stroke: '#ddd' }}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    background: 'rgba(255,255,255,0.95)',
+                                                    border: 'none',
+                                                    borderRadius: '8px',
+                                                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                                                }}
+                                            />
+                                            <Legend />
+                                            <Bar dataKey="Open" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                                            <Bar dataKey="Resolved" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                            <Bar dataKey="Breached" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
                             </Box>
                         </Paper>
                     </Box>
@@ -721,71 +741,80 @@ const WelcomePage = () => {
                                     <Visibility />
                                 </IconButton>
                             </Box>
-                            <Box sx={{ flex: 1, width: '100%', minHeight: 0, display: 'flex', alignItems: 'center' }}>
-                                <ResponsiveContainer width="100%" height="90%">
-                                    <PieChart>
-                                        <Pie
-                                            data={employeeStats?.roleWise ? 
-                                                Object.entries(employeeStats.roleWise).map(([name, value]) => ({
-                                                    name,
-                                                    value
-                                                })) : []
-                                            }
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius="60%"
-                                            outerRadius="80%"
-                                            fill="#8884d8"
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                            label={({
-                                                cx,
-                                                cy,
-                                                midAngle,
-                                                innerRadius,
-                                                outerRadius,
-                                                value,
-                                                name
-                                            }) => {
-                                                const RADIAN = Math.PI / 180;
-                                                const radius = 25 + innerRadius + (outerRadius - innerRadius);
-                                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            <Box sx={{ flex: 1, width: '100%', minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {loading ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                        <CircularProgress sx={{ color: '#8b5cf6' }} />
+                                        <Typography variant="body2" color="text.secondary">
+                                            Loading team distribution...
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height="90%">
+                                        <PieChart>
+                                            <Pie
+                                                data={employeeStats?.roleWise ? 
+                                                    Object.entries(employeeStats.roleWise).map(([name, value]) => ({
+                                                        name,
+                                                        value
+                                                    })) : []
+                                                }
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius="60%"
+                                                outerRadius="80%"
+                                                fill="#8884d8"
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                                label={({
+                                                    cx,
+                                                    cy,
+                                                    midAngle,
+                                                    innerRadius,
+                                                    outerRadius,
+                                                    value,
+                                                    name
+                                                }) => {
+                                                    const RADIAN = Math.PI / 180;
+                                                    const radius = 25 + innerRadius + (outerRadius - innerRadius);
+                                                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-                                                return (
-                                                    <text
-                                                        x={x}
-                                                        y={y}
-                                                        fill="#666"
-                                                        textAnchor={x > cx ? 'start' : 'end'}
-                                                        dominantBaseline="central"
-                                                        style={{ fontSize: '12px' }}
-                                                    >
-                                                        {`${name} (${value})`}
-                                                    </text>
-                                                );
-                                            }}
-                                        >
-                                            {employeeStats?.roleWise &&
-                                                Object.entries(employeeStats.roleWise).map((entry, index) => (
-                                                    <Cell
-                                                        key={`cell-${index}`}
-                                                        fill={COLORS[index % COLORS.length]}
-                                                        stroke="rgba(255,255,255,0.8)"
-                                                        strokeWidth={2}
-                                                    />
-                                                ))}
-                                        </Pie>
-                                        <Tooltip
-                                            contentStyle={{
-                                                background: 'rgba(255,255,255,0.95)',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                                            }}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                                                    return (
+                                                        <text
+                                                            x={x}
+                                                            y={y}
+                                                            fill="#666"
+                                                            textAnchor={x > cx ? 'start' : 'end'}
+                                                            dominantBaseline="central"
+                                                            style={{ fontSize: '12px' }}
+                                                        >
+                                                            {`${name} (${value})`}
+                                                        </text>
+                                                    );
+                                                }}
+                                            >
+                                                {employeeStats?.roleWise &&
+                                                    Object.entries(employeeStats.roleWise).map((entry, index) => (
+                                                        <Cell
+                                                            key={`cell-${index}`}
+                                                            fill={COLORS[index % COLORS.length]}
+                                                            stroke="rgba(255,255,255,0.8)"
+                                                            strokeWidth={2}
+                                                        />
+                                                    ))}
+                                            </Pie>
+                                            <Tooltip
+                                                contentStyle={{
+                                                    background: 'rgba(255,255,255,0.95)',
+                                                    border: 'none',
+                                                    borderRadius: '8px',
+                                                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                                                }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                )}
                             </Box>
                         </Paper>
                     </Box>
@@ -855,67 +884,76 @@ const WelcomePage = () => {
                                     <Visibility />
                                 </IconButton>
                             </Box>
-                            <Box sx={{ flex: 1, width: '100%', minHeight: 0 }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart
-                                        data={projects.map(project => ({
-                                            title: project.title,
-                                            assigned: project.assignedEmployees?.length || 0,
-                                            remaining: project.teamSizeLimit - (project.assignedEmployees?.length || 0),
-                                        }))}
-                                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-                                        <XAxis 
-                                            dataKey="title" 
-                                            tick={{ fill: '#666', fontSize: 12 }}
-                                            axisLine={{ stroke: '#ddd' }}
-                                        />
-                                        <YAxis
-                                            tick={{ fill: '#666', fontSize: 12 }}
-                                            axisLine={{ stroke: '#ddd' }}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                background: 'rgba(255,255,255,0.95)',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                                            }}
-                                        />
-                                        <Legend />
-                                        <defs>
-                                            <linearGradient id="assignedGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
-                                            </linearGradient>
-                                            <linearGradient id="remainingGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                                            </linearGradient>
-                                        </defs>
-                                        <Area 
-                                            type="monotone" 
-                                            dataKey="assigned" 
-                                            stroke="#10b981" 
-                                            strokeWidth={2}
-                                            fill="url(#assignedGradient)"
-                                            dot={{ fill: '#10b981', strokeWidth: 2 }}
-                                            activeDot={{ r: 8 }}
-                                            name="Assigned"
-                                        />
-                                        <Area 
-                                            type="monotone" 
-                                            dataKey="remaining" 
-                                            stroke="#3b82f6" 
-                                            strokeWidth={2}
-                                            fill="url(#remainingGradient)"
-                                            dot={{ fill: '#3b82f6', strokeWidth: 2 }}
-                                            activeDot={{ r: 8 }}
-                                            name="Available"
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
+                            <Box sx={{ flex: 1, width: '100%', minHeight: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                {loading ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                        <CircularProgress sx={{ color: '#10b981' }} />
+                                        <Typography variant="body2" color="text.secondary">
+                                            Loading projects overview...
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart
+                                            data={projects.map(project => ({
+                                                title: project.title,
+                                                assigned: project.assignedEmployees?.length || 0,
+                                                remaining: project.teamSizeLimit - (project.assignedEmployees?.length || 0),
+                                            }))}
+                                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                                            <XAxis 
+                                                dataKey="title" 
+                                                tick={{ fill: '#666', fontSize: 12 }}
+                                                axisLine={{ stroke: '#ddd' }}
+                                            />
+                                            <YAxis
+                                                tick={{ fill: '#666', fontSize: 12 }}
+                                                axisLine={{ stroke: '#ddd' }}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    background: 'rgba(255,255,255,0.95)',
+                                                    border: 'none',
+                                                    borderRadius: '8px',
+                                                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                                                }}
+                                            />
+                                            <Legend />
+                                            <defs>
+                                                <linearGradient id="assignedGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                                                </linearGradient>
+                                                <linearGradient id="remainingGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                                                </linearGradient>
+                                            </defs>
+                                            <Area 
+                                                type="monotone" 
+                                                dataKey="assigned" 
+                                                stroke="#10b981" 
+                                                strokeWidth={2}
+                                                fill="url(#assignedGradient)"
+                                                dot={{ fill: '#10b981', strokeWidth: 2 }}
+                                                activeDot={{ r: 8 }}
+                                                name="Assigned"
+                                            />
+                                            <Area 
+                                                type="monotone" 
+                                                dataKey="remaining" 
+                                                stroke="#3b82f6" 
+                                                strokeWidth={2}
+                                                fill="url(#remainingGradient)"
+                                                dot={{ fill: '#3b82f6', strokeWidth: 2 }}
+                                                activeDot={{ r: 8 }}
+                                                name="Available"
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                )}
                             </Box>
                         </Paper>
                     </Box>
@@ -973,42 +1011,53 @@ const WelcomePage = () => {
                                     <Visibility />
                                 </IconButton>
                             </Box>
-                            <Box sx={{ flex: 1, width: '100%', minHeight: 0, overflowY: 'auto' }}>
-                                {projectApplications.map((application) => (
-                                    <Box
-                                        key={application._id}
-                                        sx={{
-                                            mb: 2,
-                                            p: 2,
-                                            borderRadius: 2,
-                                            background: 'rgba(0,0,0,0.03)',
-                                            '&:hover': {
-                                                background: 'rgba(0,0,0,0.05)',
-                                            }
-                                        }}
-                                    >
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                            <Typography variant="subtitle1" fontWeight="600">
-                                                {application.project.title}
-                                            </Typography>
-                                            <Chip
-                                                label={application.status}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: application.status === 'approved' ? '#10b981' : 
-                                                            application.status === 'pending' ? '#f59e0b' : '#ef4444',
-                                                    color: 'white'
-                                                }}
-                                            />
-                                        </Box>
+                            <Box sx={{ flex: 1, width: '100%', minHeight: 0, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                {loading ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                        <CircularProgress sx={{ color: '#f59e0b' }} />
                                         <Typography variant="body2" color="text.secondary">
-                                            {application.employee.name} ({application.employee.employeeId})
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            Applied: {new Date(application.appliedAt).toLocaleDateString()}
+                                            Loading project applications...
                                         </Typography>
                                     </Box>
-                                ))}
+                                ) : (
+                                    <Box sx={{ width: '100%', height: '100%', overflowY: 'auto' }}>
+                                        {projectApplications.map((application) => (
+                                            <Box
+                                                key={application._id}
+                                                sx={{
+                                                    mb: 2,
+                                                    p: 2,
+                                                    borderRadius: 2,
+                                                    background: 'rgba(0,0,0,0.03)',
+                                                    '&:hover': {
+                                                        background: 'rgba(0,0,0,0.05)',
+                                                    }
+                                                }}
+                                            >
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                    <Typography variant="subtitle1" fontWeight="600">
+                                                        {application.project.title}
+                                                    </Typography>
+                                                    <Chip
+                                                        label={application.status}
+                                                        size="small"
+                                                        sx={{
+                                                            bgcolor: application.status === 'approved' ? '#10b981' : 
+                                                                    application.status === 'pending' ? '#f59e0b' : '#ef4444',
+                                                            color: 'white'
+                                                        }}
+                                                    />
+                                                </Box>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {application.employee.name} ({application.employee.employeeId})
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Applied: {new Date(application.appliedAt).toLocaleDateString()}
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                )}
                             </Box>
                         </Paper>
                     </Box>

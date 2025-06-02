@@ -22,6 +22,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import { useTheme } from '@mui/material/styles';
+import LoadingScreen from './LoadingScreen';
 
 // Add this new styled component for the content type selector
 const ContentTypeSelector = styled(Box)(({ theme }) => ({
@@ -435,6 +436,7 @@ const CardsPage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [typeCounts, setTypeCounts] = useState({});
   const [previewImage, setPreviewImage] = useState('');
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Add new state for content blocks
   const [contentBlocks, setContentBlocks] = useState([]);
@@ -498,15 +500,24 @@ const CardsPage = () => {
 
   // Fetch cards data
   useEffect(() => {
-    fetchCards();
-    fetchCardCounts();
+    try {
 
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
+      fetchCards();
+      fetchCardCounts();
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+      const handleScroll = () => {
+        setShowScrollTop(window.scrollY > 300);
+      };
+
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    } catch (error) {
+      console.error('Error fetching cards:', error);
+    } finally {
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
+    }
   }, [fetchCards]);
 
   // Fetch card counts by category
@@ -912,6 +923,10 @@ const CardsPage = () => {
     }
     return '';
   };
+
+  if (initialLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Box
