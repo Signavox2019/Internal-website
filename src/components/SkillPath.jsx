@@ -144,7 +144,7 @@ import {
     ProjectCard,
     StyledChip
 } from './styled';
-
+import LoadingScreen from './LoadingScreen';
 // Register ChartJS components
 ChartJS.register(
     CategoryScale,
@@ -187,13 +187,23 @@ const SkillPath = () => {
     const [viewMode, setViewMode] = useState('profile');
     const [loadingEmployee, setLoadingEmployee] = useState(false);
     const [employeeError, setEmployeeError] = useState(null);
+    const [initialLoading, setInitialLoading] = useState(true);
 
     const token = localStorage.getItem('token');
     const isAdmin = JSON.parse(localStorage.getItem('userData'))?.isAdmin;
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        try {
+            fetchData();
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            toast.error('Failed to load data');
+        } finally {
+            setTimeout(() => {
+                setInitialLoading(false);
+            }, 500);
+        }
+    }, []); 
 
     const fetchData = async () => {
         try {

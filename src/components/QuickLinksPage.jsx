@@ -38,6 +38,7 @@ import BaseUrl from '../Api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
+import LoadingScreen from './LoadingScreen';
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -145,7 +146,7 @@ const QuickLinksPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
-
+  const [initialLoading, setInitialLoading] = useState(true);
   const displayedLinks = links.filter(link =>
     link.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -169,8 +170,17 @@ const QuickLinksPage = () => {
   };
 
   useEffect(() => {
-    fetchQuickLinks();
-  }, []);
+    try {
+      fetchQuickLinks();
+    } catch (error) {
+      console.error('Error fetching quick links:', error);
+      toast.error('Failed to load quick links');
+    } finally {
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
+    }
+  });
 
   const handleOpenDialog = (link = null) => {
     if (link) {
@@ -267,6 +277,10 @@ const QuickLinksPage = () => {
   const handleCardClick = (link) => {
     window.open(link, '_blank');
   };
+
+  if (initialLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Box
