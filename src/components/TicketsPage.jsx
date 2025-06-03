@@ -54,6 +54,7 @@ import axios from 'axios';
 import BaseUrl from '../Api';
 // import { toast } from 'react-toastify';
 import { ToastContainer, toast } from 'react-toastify';
+import LoadingScreen from './LoadingScreen';
 
 import Swal from 'sweetalert2';
 
@@ -219,6 +220,7 @@ const TicketsPage = () => {
   };
 
   useEffect(() => {
+    setLoading(true);
     const userData = JSON.parse(localStorage.getItem('userData'));
     if (userData?.isAdmin || userData?.role === 'Support') {
       fetchAllTickets();
@@ -227,6 +229,9 @@ const TicketsPage = () => {
       fetchMyTickets();
       fetchMyTicketStats();
     }
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
   }, []);
 
   const fetchAllTickets = async () => {
@@ -689,6 +694,9 @@ const TicketsPage = () => {
     ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ticket.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>

@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 import BaseUrl from '../Api';
+import LoadingScreen from './LoadingScreen';
 
 // Styled Components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -312,12 +313,22 @@ const CommunityConnect = () => {
     const [zoom, setZoom] = useState(0.8);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [translate, setTranslate] = useState({ x: 0, y: 0 });
+    const [initialLoading, setInitialLoading] = useState(true);
 
     useEffect(() => {
-        fetchEmployees();
-        const handleScroll = () => setShowScrollTop(window.scrollY > 300);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        try {                       
+            fetchEmployees();
+            const handleScroll = () => setShowScrollTop(window.scrollY > 300);
+            window.addEventListener('scroll', handleScroll);
+            return () => window.removeEventListener('scroll', handleScroll);
+        } catch (error) {
+            console.error('Error fetching employees:', error);
+            toast.error('Failed to load employees');
+        } finally {
+            setTimeout(() => {
+                setInitialLoading(false);
+            }, 500);
+        }
     }, []);
 
     const getColorByTeam = (team, role) => {
@@ -480,6 +491,10 @@ const CommunityConnect = () => {
     const handleCenterTree = () => setTranslate({ x: 0, y: 0 });
     
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (initialLoading) {
+        return <LoadingScreen />;
+    }
 
     return (
         <PageContainer>

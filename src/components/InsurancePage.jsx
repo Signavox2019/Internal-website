@@ -29,6 +29,7 @@ import {
   Security,
   AccountBalance,
 } from '@mui/icons-material';
+import LoadingScreen from './LoadingScreen';
 
 // Styled components for the credit card design
 const CreditCardContainer = styled(Box)(({ theme }) => ({
@@ -445,6 +446,8 @@ const AmountChip = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(2),
 }));
 
+
+
 const InsurancePage = () => {
   const [userData, setUserData] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -488,10 +491,20 @@ const InsurancePage = () => {
       cardNumber: '3456 •••• •••• 3456',
     },
   ];
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    const storedUserData = JSON.parse(localStorage.getItem('userData'));
-    setUserData(storedUserData);
+    try {
+      const storedUserData = JSON.parse(localStorage.getItem('userData'));
+      setUserData(storedUserData);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast.error('Failed to load user data');
+    } finally {
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
+    }
   }, []);
 
   useEffect(() => {
@@ -542,6 +555,10 @@ const InsurancePage = () => {
       { icon: <AccountBalance />, title: 'Rent Coverage', desc: 'Alternative accommodation' },
     ],
   };
+
+  if (initialLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', background: '#000' }}>
