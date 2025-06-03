@@ -212,12 +212,31 @@ const SkillPath = () => {
 
             // Fetch employee profile
             const profileResponse = await axios.get(`${BaseUrl}/employees/profile`, { headers });
-            setEmployeeData(profileResponse.data.employee);
+            console.log('Profile Response:', profileResponse.data); // Debug log
+            
+            // Update employeeData with the direct response data
+            setEmployeeData({
+                ...profileResponse.data,
+                skills: profileResponse.data.skills || [],
+                previousCompanies: profileResponse.data.previousCompanies || [],
+                previousProjects: profileResponse.data.previousProjects || [],
+                certifications: profileResponse.data.certifications || [],
+                experience: profileResponse.data.experience || '0 years'
+                
+            });
 
             // If admin, fetch all employees
             if (isAdmin) {
                 const allEmployeesResponse = await axios.get(`${BaseUrl}/employees`, { headers });
-                setAllEmployees(allEmployeesResponse.data);
+                // Ensure all array fields are initialized even if null
+                const processedEmployees = allEmployeesResponse.data.map(emp => ({
+                    ...emp,
+                    skills: emp.skills || [],
+                    previousCompanies: emp.previousCompanies || [],
+                    previousProjects: emp.previousProjects || [],
+                    certifications: emp.certifications || []
+                }));
+                setAllEmployees(processedEmployees);
             }
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -344,16 +363,8 @@ const SkillPath = () => {
             setEmployeeError(null);
             const token = localStorage.getItem('token');
 
-            const response = await axios.get(
-                `${BaseUrl}/employees/${employee._id}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                }
-            );
-
-            setSelectedEmployee(response.data);
+            // Since we already have all the employee data, we can just set it directly
+            setSelectedEmployee(employee);
             setDetailModalOpen(true);
         } catch (error) {
             console.error('Error fetching employee details:', error);
@@ -480,7 +491,19 @@ const SkillPath = () => {
                                                                 </Box>
                                                             </Box>
                                                         </TableCell>
-                                                        <TableCell>{employee.role}</TableCell>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                <Typography>{employee.role}</Typography>
+                                                                {employee.isTeamLead && (
+                                                                    <Chip
+                                                                        label="Team Lead"
+                                                                        size="small"
+                                                                        color="primary"
+                                                                        sx={{ ml: 1 }}
+                                                                    />
+                                                                )}
+                                                            </Box>
+                                                        </TableCell>
                                                         <TableCell>{employee.team}</TableCell>
                                                         <TableCell>{employee.experience}</TableCell>
                                                         <TableCell>
@@ -499,14 +522,31 @@ const SkillPath = () => {
                                                                         sx={{ background: 'rgba(49, 17, 136, 0.05)' }}
                                                                     />
                                                                 )}
+                                                                {employee.skills.length === 0 && (
+                                                                    <Typography variant="caption" color="text.secondary">
+                                                                        No skills added
+                                                                    </Typography>
+                                                                )}
                                                             </Box>
                                                         </TableCell>
                                                         <TableCell align="center">
-                                                            <Tooltip title="View Details">
-                                                                <IconButton onClick={() => handleViewEmployee(employee)}>
-                                                                    <Visibility />
-                                                                </IconButton>
-                                                            </Tooltip>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                                                <Tooltip title="View Details">
+                                                                    <IconButton onClick={() => handleViewEmployee(employee)}>
+                                                                        <Visibility />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                                {employee.currentProject && (
+                                                                    <Tooltip title={`Current Project: ${employee.currentProject.title}`}>
+                                                                        <Chip
+                                                                            label={employee.currentProject.title}
+                                                                            size="small"
+                                                                            color="success"
+                                                                            variant="outlined"
+                                                                        />
+                                                                    </Tooltip>
+                                                                )}
+                                                            </Box>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -554,7 +594,7 @@ const SkillPath = () => {
                                 </StyledAvatar>
                                 <Box sx={{ flex: 1 }}>
                                     <Typography variant="h3" gutterBottom fontWeight="bold">
-                                        {employeeData?.name}
+                                        {employeeData?.name || 'Loading...'}
                                     </Typography>
                                     <Typography variant="h5" sx={{ opacity: 0.9 }}>
                                         {employeeData?.role} • {employeeData?.team}
@@ -566,10 +606,31 @@ const SkillPath = () => {
                                             sx={{ background: 'rgba(255,255,255,0.1)' }}
                                         />
                                         <Chip
-                                            label={employeeData?.experience}
+                                            label={employeeData?.status}
                                             icon={<Work />}
                                             sx={{ background: 'rgba(255,255,255,0.1)' }}
                                         />
+                                        {employeeData?.bloodGroup && (
+                                            <Chip
+                                                label={`Blood Group: ${employeeData.bloodGroup}`}
+                                                icon={<LocalHospital />}
+                                                sx={{ background: 'rgba(255,255,255,0.1)' }}
+                                            />
+                                        )}
+                                        {employeeData?.isTeamLead && (
+                                            <Chip
+                                                label="Team Lead"
+                                                icon={<Group />}
+                                                sx={{ background: 'rgba(255,255,255,0.1)' }}
+                                            />
+                                        )}
+                                        {employeeData?.isAdmin && (
+                                            <Chip
+                                                label="Admin"
+                                                icon={<AdminPanelSettings />}
+                                                sx={{ background: 'rgba(255,255,255,0.1)' }}
+                                            />
+                                        )}
                                     </Box>
                                 </Box>
                                 <Button
@@ -577,12 +638,12 @@ const SkillPath = () => {
                                     startIcon={<Edit />}
                                     onClick={() => {
                                         setEditForm({
-                                            skills: employeeData.skills || [],
-                                            experience: employeeData.experience || '',
-                                            previousCompanies: employeeData.previousCompanies || [],
-                                            previousProjects: employeeData.previousProjects || [],
-                                            certifications: employeeData.certifications || [],
-                                            bloodGroup: employeeData.bloodGroup || '',
+                                            skills: employeeData?.skills || [],
+                                            experience: employeeData?.experience || '',
+                                            previousCompanies: employeeData?.previousCompanies || [],
+                                            previousProjects: employeeData?.previousProjects || [],
+                                            certifications: employeeData?.certifications || [],
+                                            bloodGroup: employeeData?.bloodGroup || '',
                                         });
                                         setEditModalOpen(true);
                                     }}
@@ -591,6 +652,7 @@ const SkillPath = () => {
                                         backdropFilter: 'blur(10px)',
                                         border: '1px solid rgba(255,255,255,0.2)',
                                         borderRadius: '12px',
+                                        zIndex: 1000,
                                         '&:hover': {
                                             background: 'rgba(255,255,255,0.2)',
                                         }
@@ -1357,7 +1419,7 @@ const SkillPath = () => {
                                         <Typography variant="h5" sx={{ mb: 0.5, fontWeight: 600 }}>
                                             {selectedEmployee.name}
                                         </Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                                             <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
                                                 {selectedEmployee.role} • {selectedEmployee.team}
                                             </Typography>
@@ -1366,23 +1428,30 @@ const SkillPath = () => {
                                                 status={selectedEmployee.status}
                                                 size="small"
                                             />
+                                            {selectedEmployee.isTeamLead && (
+                                                <Chip
+                                                    label="Team Lead"
+                                                    size="small"
+                                                    color="primary"
+                                                    icon={<Group />}
+                                                />
+                                            )}
+                                            {selectedEmployee.isAdmin && (
+                                                <Chip
+                                                    label="Admin"
+                                                    size="small"
+                                                    color="secondary"
+                                                    icon={<AdminPanelSettings />}
+                                                />
+                                            )}
                                         </Box>
                                     </Box>
                                 </Box>
                                 <IconButton
                                     onClick={() => setDetailModalOpen(false)}
-                                    className='close-button text-lg'
-                                    sx={{ 
-                                        color: 'white',
-                                        transition: 'color 0.3s ease', 
-                                        cursor: 'pointer',
-                                        zIndex: 1000,
-                                        '&:hover': { 
-                                            color: '#311188' 
-                                        } 
-                                    }}
+                                    sx={{ color: 'white' }}
                                 >
-                                    <Close sx={{ fontSize: '2rem' }} />
+                                    <Close />
                                 </IconButton>
                             </Box>
                         </DialogTitle>
@@ -1434,7 +1503,6 @@ const SkillPath = () => {
                                         transition={{ delay: 0.2 }}
                                     >
                                         <div className="flex justify-start items-center gap-2">
-
                                             <div className="detail-icon">
                                                 <Work />
                                             </div>
@@ -1448,7 +1516,7 @@ const SkillPath = () => {
                                                     Experience
                                                 </Typography>
                                                 <Typography variant="h6">
-                                                    {selectedEmployee.experience}
+                                                    {selectedEmployee.experience || '0 years'}
                                                 </Typography>
                                             </Box>
                                             <Box>
@@ -1570,7 +1638,6 @@ const SkillPath = () => {
                                             style={{ gridColumn: '1 / -1' }}
                                         >
                                             <div className="flex justify-start items-center gap-2">
-
                                                 <div className="detail-icon">
                                                     <School />
                                                 </div>
