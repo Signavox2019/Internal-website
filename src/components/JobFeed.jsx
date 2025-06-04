@@ -83,6 +83,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import LoadingScreen from './LoadingScreen';
 
 // Add new styled components for loading animations
 const pulseAnimation = keyframes`
@@ -1362,12 +1363,7 @@ const Projects = () => {
 
     if (loading) {
         return (
-            <LoadingOverlayStyled>
-                <LoadingSpinnerStyled />
-                <Typography variant="h6" sx={{ mt: 3, color: 'primary.main', fontWeight: 500 }}>
-                    Loading Projects...
-                </Typography>
-            </LoadingOverlayStyled>
+            <LoadingScreen />
         );
     }
 

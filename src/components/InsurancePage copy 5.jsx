@@ -336,19 +336,28 @@ const ComprehensiveSection = styled(Box)(({ theme }) => ({
 }));
 
 const InsuranceGrid = styled(Grid)(({ theme }) => ({
+  position: 'relative',
   display: 'flex',
-  flexWrap: 'wrap',
   justifyContent: 'center',
   gap: theme.spacing(4),
   [theme.breakpoints.down('sm')]: {
     gap: theme.spacing(2),
   },
-  maxWidth: '1400px',
-  margin: '0 auto',
-  padding: theme.spacing(0, 2),
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '100%',
+    height: '100%',
+    background: 'radial-gradient(circle, rgba(49, 17, 136, 0.05) 0%, transparent 70%)',
+    zIndex: -1,
+  },
 }));
 
 const InsuranceCard = styled(motion.div)(({ theme }) => ({
+  height: 'auto',
   width: '100%',
   background: 'rgba(255, 255, 255, 0.95)',
   borderRadius: theme.spacing(4),
@@ -360,16 +369,11 @@ const InsuranceCard = styled(motion.div)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   minHeight: {
-    xs: '320px',
-    sm: '350px',
-    md: '380px'
+    xs: '450px',
+    sm: '500px',
+    md: '550px',
+    lg: '600px',
   },
-  maxWidth: {
-    xs: '100%',
-    sm: '480px',
-    md: '520px'
-  },
-  margin: '0 auto',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -383,12 +387,6 @@ const InsuranceCard = styled(motion.div)(({ theme }) => ({
     transform: 'translateY(-10px)',
     boxShadow: '0 20px 40px rgba(49, 17, 136, 0.15)',
   },
-  '& .MuiCardContent-root': {
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between'
-  }
 }));
 
 const CardTopSection = styled(Box)(({ theme }) => ({
@@ -436,8 +434,8 @@ const IconCircle = styled(Box)(({ theme }) => ({
 const BenefitList = styled(Box)(({ theme }) => ({
   padding: theme.spacing(3),
   display: 'grid',
-  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-  gap: { xs: 1, sm: 1.5, md: 2 },
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gap: theme.spacing(2),
   [theme.breakpoints.down('sm')]: {
     gridTemplateColumns: '1fr',
     padding: theme.spacing(2),
@@ -550,11 +548,15 @@ const InsurancePage = () => {
     return () => clearInterval(timer);
   }, [insuranceTypes.length]);
 
-  const handleDotClick = (index) => {
-    setActiveStep(index);
+  const maxSteps = insuranceTypes.length;
+
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
-  const maxSteps = insuranceTypes.length;
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
 
   const handleStepChange = (step) => {
     setActiveStep(step);
@@ -592,178 +594,186 @@ const InsurancePage = () => {
   }
 
   return (
-    <Box sx={{ background: '#000', position: 'relative' }}>
-      <Box sx={{ position: 'relative', width: '100%', zIndex: 2 }}>
-        <SwipeableViews
-          axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-          index={activeStep}
-          onChangeIndex={handleStepChange}
-          enableMouseEvents
-          style={{ width: '100%', height: '80vh' }}
-        >
-          {insuranceTypes.map((insurance, index) => (
-            <div key={index}>
-              {Math.abs(activeStep - index) <= 2 ? (
-                <SlideContainer bgimage={insurance.bgImage}>
-                  <ContentWrapper>
-                    {/* Left side - Insurance Details */}
-                    <InsuranceDetails>
-                      <motion.div
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6 }}
+    <Box sx={{ background: '#000' }}>
+      <SwipeableViews
+        axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+        index={activeStep}
+        onChangeIndex={handleStepChange}
+        enableMouseEvents
+        style={{ width: '100%', height: '80vh' }}
+      >
+        {insuranceTypes.map((insurance, index) => (
+          <div key={index}>
+            {Math.abs(activeStep - index) <= 2 ? (
+              <SlideContainer bgimage={insurance.bgImage}>
+                <ContentWrapper>
+                  {/* Left side - Insurance Details */}
+                  <InsuranceDetails>
+                    <motion.div
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <Typography
+                        variant="h2"
+                        sx={{
+                          fontWeight: 700,
+                          mb: 2,
+                          background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                        }}
                       >
-                        <Typography
-                          variant="h2"
-                          sx={{
-                            fontWeight: 700,
-                            mb: 2,
-                            background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                          }}
-                        >
-                          {insurance.type}
-                        </Typography>
-                        <Typography
-                          variant="h4"
-                          sx={{
-                            mb: 3,
-                            color: 'rgba(255,255,255,0.9)',
-                            fontWeight: 600,
-                          }}
-                        >
-                          Coverage up to {insurance.amount}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            mb: 4,
-                            color: 'rgba(255,255,255,0.7)',
-                            fontSize: '1.1rem',
-                            lineHeight: 1.6,
-                          }}
-                        >
-                          {insurance.benefits.join(' • ')}
-                        </Typography>
-
-                        <StatsFeatureList>
-                          {features[insurance.type].map((feature, idx) => (
-                            <StatsFeatureItem key={idx}>
-                              <Avatar
-                                sx={{
-                                  bgcolor: 'primary.main',
-                                  width: 40,
-                                  height: 40,
-                                }}
-                              >
-                                {feature.icon}
-                              </Avatar>
-                              <Box>
-                                <Typography variant="subtitle1" fontWeight="600">
-                                  {feature.title}
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                                  {feature.desc}
-                                </Typography>
-                              </Box>
-                            </StatsFeatureItem>
-                          ))}
-                        </StatsFeatureList>
-                      </motion.div>
-                    </InsuranceDetails>
-
-                    {/* Right side - Credit Card */}
-                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                      <motion.div
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6 }}
+                        {insurance.type}
+                      </Typography>
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          mb: 3,
+                          color: 'rgba(255,255,255,0.9)',
+                          fontWeight: 600,
+                        }}
                       >
-                        <InsuranceCreditCard
-                          initial={{ rotateY: -90 }}
-                          animate={{ rotateY: 0 }}
-                          exit={{ rotateY: 90 }}
-                          transition={{ duration: 0.6 }}
-                          bgimage={insurance.bgImage}
-                        >
-                          <CardOverlay />
-                          <InsuranceCardContent>
+                        Coverage up to {insurance.amount}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          mb: 4,
+                          color: 'rgba(255,255,255,0.7)',
+                          fontSize: '1.1rem',
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {insurance.benefits.join(' • ')}
+                      </Typography>
+
+                      <StatsFeatureList>
+                        {features[insurance.type].map((feature, idx) => (
+                          <StatsFeatureItem key={idx}>
+                            <Avatar
+                              sx={{
+                                bgcolor: 'primary.main',
+                                width: 40,
+                                height: 40,
+                              }}
+                            >
+                              {feature.icon}
+                            </Avatar>
                             <Box>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                {insurance.icon}
-                                <Typography variant="h6" sx={{ fontWeight: 600 }}>{insurance.type}</Typography>
-                              </Box>
-                              <CardChip />
-                              <Typography variant="h5" sx={{ mb: 1, fontFamily: 'monospace' }}>
-                                {insurance.cardNumber}
+                              <Typography variant="subtitle1" fontWeight="600">
+                                {feature.title}
+                              </Typography>
+                              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                                {feature.desc}
                               </Typography>
                             </Box>
-                            <Box>
-                              <Typography variant="body2" sx={{ mb: 1 }}>Card Holder</Typography>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                                <Typography variant="h6">{userData?.name || 'Loading...'}</Typography>
-                                <Typography variant="h5" sx={{ fontWeight: 600 }}>{insurance.amount}</Typography>
-                              </Box>
+                          </StatsFeatureItem>
+                        ))}
+                      </StatsFeatureList>
+                    </motion.div>
+                  </InsuranceDetails>
+
+                  {/* Right side - Credit Card */}
+                  <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                    <motion.div
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <InsuranceCreditCard
+                        initial={{ rotateY: -90 }}
+                        animate={{ rotateY: 0 }}
+                        exit={{ rotateY: 90 }}
+                        transition={{ duration: 0.6 }}
+                        bgimage={insurance.bgImage}
+                      >
+                        <CardOverlay />
+                        <InsuranceCardContent>
+                          <Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                              {insurance.icon}
+                              <Typography variant="h6" sx={{ fontWeight: 600 }}>{insurance.type}</Typography>
                             </Box>
-                          </InsuranceCardContent>
-                        </InsuranceCreditCard>
-                      </motion.div>
-                    </Box>
-                  </ContentWrapper>
-                </SlideContainer>
-              ) : null}
-            </div>
-          ))}
+                            <CardChip />
+                            <Typography variant="h5" sx={{ mb: 1, fontFamily: 'monospace' }}>
+                              {insurance.cardNumber}
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="body2" sx={{ mb: 1 }}>Card Holder</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                              <Typography variant="h6">{userData?.name || 'Loading...'}</Typography>
+                              <Typography variant="h5" sx={{ fontWeight: 600 }}>{insurance.amount}</Typography>
+                            </Box>
+                          </Box>
+                        </InsuranceCardContent>
+                      </InsuranceCreditCard>
+                    </motion.div>
+                  </Box>
+                </ContentWrapper>
 
-        </SwipeableViews>
-        {/* Carousel Dots - Now outside SwipeableViews to be visible on all pages */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 10,
-            left: 0,
-            width: '100%',
-            zIndex: 1000,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            pointerEvents: 'auto',
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              gap: 2,
-              padding: '8px 16px',
-              borderRadius: '20px',
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            {Array.from({ length: maxSteps }).map((_, index) => (
-              <Box
-                key={index}
-                onClick={() => handleDotClick(index)}
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: '50%',
-                  backgroundColor: activeStep === index ? 'white' : 'rgba(255, 255, 255, 0.3)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'scale(1.2)',
-                    backgroundColor: activeStep === index ? 'white' : 'rgba(255, 255, 255, 0.5)',
-                  },
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
-      </Box>
-
-
+                {/* Navigation controls */}
+                <Box sx={{ position: 'absolute', bottom: 5, width: '100%', zIndex: 2 }}>
+                  <MobileStepper
+                    steps={maxSteps}
+                    position="static"
+                    activeStep={activeStep}
+                    sx={{
+                      background: 'transparent',
+                      maxWidth: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      zIndex: 1000,
+                      margin: '0 auto',
+                      '& .MuiMobileStepper-dot': {
+                        backgroundColor: 'rgba(255,255,255,0.3)',
+                        width: 12,
+                        height: 12,
+                        margin: '0 8px',
+                      },
+                      '& .MuiMobileStepper-dotActive': {
+                        backgroundColor: 'white',
+                      },
+                    }}
+                    // nextButton={
+                    //   <IconButton
+                    //     size="large"
+                    //     onClick={handleNext}
+                    //     disabled={activeStep === maxSteps - 1}
+                    //     sx={{
+                    //       color: 'white',
+                    //       bgcolor: 'rgba(255,255,255,0.1)',
+                    //       '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+                    //       '&.Mui-disabled': { opacity: 0.3 },
+                    //     }}
+                    //   >
+                    //     {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />}
+                    //   </IconButton>
+                    // }
+                    // backButton={
+                    //   <IconButton
+                    //     size="large"
+                    //     onClick={handleBack}
+                    //     disabled={activeStep === 0}
+                    //     sx={{
+                    //       color: 'white',
+                    //       bgcolor: 'rgba(255,255,255,0.1)',
+                    //       '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+                    //       '&.Mui-disabled': { opacity: 0.3 },
+                    //     }}
+                    //   >
+                    //     {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
+                    //   </IconButton>
+                    // }
+                  />
+                </Box>
+              </SlideContainer>
+            ) : null}
+          </div>
+        ))}
+      </SwipeableViews>
 
       {/* Detailed Insurance Policies Section */}
       <ComprehensiveSection>
@@ -783,241 +793,165 @@ const InsurancePage = () => {
             </GradientText>
           </motion.div>
 
-          <Box 
-            sx={{ 
-              maxWidth: '1400px', 
-              margin: '0 auto',
-              px: { xs: 2, sm: 3, md: 4 }
-            }}
-          >
-            <Grid 
-              container 
-              spacing={{ xs: 2, sm: 3, md: 4 }}
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-              }}
-            >
-              {insuranceTypes.map((insurance, index) => (
-                <Grid 
-                  item 
-                  xs={12} 
-                  md={6} 
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'stretch',
-                  }}
+          <InsuranceGrid container spacing={{ xs: 2, sm: 3, md: 4 }}>
+            {insuranceTypes.map((insurance, index) => (
+              <Grid item xs={12} sm={6} md={6} lg={3} key={index}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    style={{ 
-                      width: '100%',
-                      height: '100%',
-                      display: 'flex'
-                    }}
-                  >
-                    <InsuranceCard
-                      sx={{
-                        width: '100%',
-                        height: '100%',
-                        minHeight: {
-                          xs: '320px',
-                          sm: '350px',
-                          md: '380px'
-                        },
-                        maxWidth: {
-                          xs: '100%',
-                          sm: '480px',
-                          md: '520px'
-                        },
-                        borderRadius: { xs: '16px', sm: '24px', md: '30px' },
-                        '& .MuiCardContent-root': {
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between'
-                        }
-                      }}
-                    >
-                      <CardTopSection
+                  <InsuranceCard>
+                    <CardTopSection>
+                      <IconCircle>
+                        <Box sx={{ 
+                          transform: { 
+                            xs: 'scale(1.2)',
+                            sm: 'scale(1.3)',
+                            md: 'scale(1.5)' 
+                          }
+                        }}>
+                          {insurance.icon}
+                        </Box>
+                      </IconCircle>
+                      <Typography 
+                        variant="h5" 
+                        fontWeight="600" 
+                        gutterBottom
                         sx={{
-                          p: { xs: 2, sm: 2.5, md: 3 },
-                          minHeight: { xs: '100px', sm: '110px', md: '120px' }
+                          fontSize: {
+                            xs: '1.25rem',
+                            sm: '1.5rem',
+                            md: '1.75rem'
+                          }
                         }}
                       >
-                        <IconCircle>
-                          <Box sx={{ 
-                            transform: { 
-                              xs: 'scale(1.2)',
-                              sm: 'scale(1.3)',
-                              md: 'scale(1.5)' 
-                            }
-                          }}>
-                            {insurance.icon}
-                          </Box>
-                        </IconCircle>
-                        <Typography 
-                          variant="h5" 
-                          fontWeight="600" 
-                          gutterBottom
-                          sx={{
-                            fontSize: {
-                              xs: '1.25rem',
-                              sm: '1.5rem',
-                              md: '1.75rem'
-                            }
-                          }}
-                        >
-                          {insurance.type}
-                        </Typography>
-                        <AmountChip>
-                          <AccountBalance sx={{ 
-                            fontSize: {
-                              xs: 16,
-                              sm: 18,
-                              md: 20
-                            }
-                          }} />
-                          {insurance.amount}
-                        </AmountChip>
-                      </CardTopSection>
+                        {insurance.type}
+                      </Typography>
+                      <AmountChip>
+                        <AccountBalance sx={{ 
+                          fontSize: {
+                            xs: 16,
+                            sm: 18,
+                            md: 20
+                          }
+                        }} />
+                        {insurance.amount}
+                      </AmountChip>
+                    </CardTopSection>
 
-                      <Box 
-                        sx={{ 
-                          p: { xs: 2, sm: 2.5, md: 3 },
-                          flex: 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between'
+                    <Box sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="600"
+                        color="primary"
+                        gutterBottom
+                        sx={{
+                          fontSize: {
+                            xs: '0.875rem',
+                            sm: '1rem',
+                            md: '1.1rem'
+                          }
                         }}
                       >
-                        <Typography
-                          variant="subtitle1"
-                          fontWeight="600"
-                          color="primary"
-                          gutterBottom
-                          sx={{
-                            fontSize: {
-                              xs: '0.875rem',
-                              sm: '1rem',
-                              md: '1.1rem'
-                            },
-                            mb: 2
-                          }}
-                        >
-                          Key Benefits
-                        </Typography>
-                        <BenefitList 
-                          sx={{ 
-                            flex: 1,
-                            display: 'grid',
-                            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-                            gap: { xs: 1, sm: 1.5, md: 2 }
-                          }}
-                        >
-                          {features[insurance.type].map((feature, idx) => (
-                            <motion.div
-                              key={idx}
-                              initial={{ opacity: 0, x: -10 }}
-                              whileInView={{ opacity: 1, x: 0 }}
-                              transition={{ delay: idx * 0.1 }}
-                            >
-                              <BenefitItem>
-                                <Box
+                        Key Benefits
+                      </Typography>
+                      <BenefitList>
+                        {features[insurance.type].map((feature, idx) => (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, x: -10 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                          >
+                            <BenefitItem>
+                              <Box
+                                sx={{
+                                  color: 'primary.main',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  '& .MuiSvgIcon-root': {
+                                    fontSize: {
+                                      xs: '1.25rem',
+                                      sm: '1.5rem',
+                                      md: '1.75rem'
+                                    }
+                                  }
+                                }}
+                              >
+                                {feature.icon}
+                              </Box>
+                              <Box>
+                                <Typography 
+                                  variant="body2" 
+                                  fontWeight="600"
                                   sx={{
-                                    color: 'primary.main',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    '& .MuiSvgIcon-root': {
-                                      fontSize: {
-                                        xs: '1.25rem',
-                                        sm: '1.5rem',
-                                        md: '1.75rem'
-                                      }
+                                    fontSize: {
+                                      xs: '0.75rem',
+                                      sm: '0.875rem',
+                                      md: '1rem'
                                     }
                                   }}
                                 >
-                                  {feature.icon}
-                                </Box>
-                                <Box>
-                                  <Typography 
-                                    variant="body2" 
-                                    fontWeight="600"
-                                    sx={{
-                                      fontSize: {
-                                        xs: '0.75rem',
-                                        sm: '0.875rem',
-                                        md: '1rem'
-                                      }
-                                    }}
-                                  >
-                                    {feature.title}
-                                  </Typography>
-                                  <Typography 
-                                    variant="caption" 
-                                    color="text.secondary"
-                                    sx={{
-                                      fontSize: {
-                                        xs: '0.7rem',
-                                        sm: '0.75rem',
-                                        md: '0.875rem'
-                                      }
-                                    }}
-                                  >
-                                    {feature.desc}
-                                  </Typography>
-                                </Box>
-                              </BenefitItem>
-                            </motion.div>
-                          ))}
-                        </BenefitList>
+                                  {feature.title}
+                                </Typography>
+                                <Typography 
+                                  variant="caption" 
+                                  color="text.secondary"
+                                  sx={{
+                                    fontSize: {
+                                      xs: '0.7rem',
+                                      sm: '0.75rem',
+                                      md: '0.875rem'
+                                    }
+                                  }}
+                                >
+                                  {feature.desc}
+                                </Typography>
+                              </Box>
+                            </BenefitItem>
+                          </motion.div>
+                        ))}
+                      </BenefitList>
+                    </Box>
 
-                        <Box
+                    <Box
+                      sx={{
+                        p: { xs: 2, sm: 2.5, md: 3 },
+                        pt: 0,
+                        mt: 'auto',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: { xs: 0.5, sm: 0.75, md: 1 },
+                      }}
+                    >
+                      {insurance.benefits.map((benefit, idx) => (
+                        <Chip
+                          key={idx}
+                          label={benefit}
+                          size="small"
+                          icon={<Shield sx={{ fontSize: { xs: 14, sm: 15, md: 16 } }} />}
                           sx={{
-                            pt: 2,
-                            mt: 'auto',
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: { xs: 0.5, sm: 0.75, md: 1 },
-                            justifyContent: 'flex-start'
+                            background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
+                            color: 'white',
+                            fontSize: {
+                              xs: '0.7rem',
+                              sm: '0.75rem',
+                              md: '0.875rem'
+                            },
+                            '& .MuiChip-icon': {
+                              color: 'white',
+                            },
                           }}
-                        >
-                          {insurance.benefits.map((benefit, idx) => (
-                            <Chip
-                              key={idx}
-                              label={benefit}
-                              size="small"
-                              icon={<Shield sx={{ fontSize: { xs: 14, sm: 15, md: 16 } }} />}
-                              sx={{
-                                background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
-                                color: 'white',
-                                fontSize: {
-                                  xs: '0.7rem',
-                                  sm: '0.75rem',
-                                  md: '0.875rem'
-                                },
-                                py: 0.5,
-                                height: 'auto',
-                                '& .MuiChip-icon': {
-                                  color: 'white',
-                                },
-                              }}
-                            />
-                          ))}
-                        </Box>
-                      </Box>
-                    </InsuranceCard>
-                  </motion.div>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
+                        />
+                      ))}
+                    </Box>
+                  </InsuranceCard>
+                </motion.div>
+              </Grid>
+            ))}
+          </InsuranceGrid>
         </Container>
       </ComprehensiveSection>
     </Box>

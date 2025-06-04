@@ -69,6 +69,7 @@ import {
   BusinessCenter as BusinessCenterIcon,
   WorkHistory as WorkHistoryIcon,
   Home as HomeIcon,
+  OpenInNew,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -225,19 +226,24 @@ const Navbar = () => {
       items: [
         { title: 'Community Connect', icon: <CommunityIcon />, path: '/community' },
         { title: 'Insurance', icon: <HealthAndSafety />, path: '/insurance' },
-        { title: 'Success Factor', icon: <SuccessIcon />, path: '/success-factor' },
-        { title: 'Work Zone', icon: <WorkZoneIcon />, path: '/work-zone' },
+        // { title: 'Success Factor', icon: <SuccessIcon />, path: '/success-factor' },
+        // { title: 'Work Zone', icon: <WorkZoneIcon />, path: '/work-zone' },
       ],
     },
     helpDesk: {
       title: 'Help Desk',
       icon: <SupportIcon />,
       items: [
-        { title: 'Payroll', icon: <PayrollIcon />, path: '/payroll' },
+        { 
+          title: 'Payroll', 
+          icon: <PayrollIcon />, 
+          externalUrl: 'https://payroll.wisetechboard.com/myprofile',
+          isExternal: true 
+        },
         { title: 'Emergency Contact', icon: <EmergencyIcon />, path: '/emergency' },
         { title: 'Tickets', icon: <TicketsIcon />, path: '/tickets' },
-        { title: 'Service Central', icon: <ServiceIcon />, path: '/service' },
-        { title: 'Ask Adam', icon: <AskAdamIcon />, path: '/ask-adam' },
+        // { title: 'Service Central', icon: <ServiceIcon />, path: '/service' },
+        // { title: 'Ask Adam', icon: <AskAdamIcon />, path: '/ask-adam' },
       ],
     },
     usefulTools: {
@@ -245,17 +251,22 @@ const Navbar = () => {
       icon: <BuildIcon />,
       items: [
         { title: 'Skill Path', icon: <SkillPathIcon />, path: '/skill-path' },
-        { title: 'Office Pass', icon: <OfficePassIcon />, path: '/office-pass' },
-        { title: 'Replicon', icon: <RepliconIcon />, path: '/replicon' },
+        // { title: 'Office Pass', icon: <OfficePassIcon />, path: '/office-pass' },
+        { 
+          title: 'Time Card', 
+          icon: <RepliconIcon />, 
+          externalUrl: 'https://payroll.wisetechboard.com/empdashboard',
+          isExternal: true 
+        },
         { title: 'Employee Directory', icon: <EmployeeIcon />, path: '/employees' },
-        { title: 'Visitor Management', icon: <VisitorIcon />, path: '/visitor' },
+        // { title: 'Visitor Management', icon: <VisitorIcon />, path: '/visitor' },
       ],
     },
     careers: {
       title: 'Careers',
       icon: <BusinessCenterIcon />,
       items: [
-        { title: 'myHire', icon: <WorkHistoryIcon />, path: '/myhire' },
+        // { title: 'myHire', icon: <WorkHistoryIcon />, path: '/myhire' },
         { title: 'Job Feed', icon: <WorkIcon />, path: '/job-feed' },
       ],
     },
@@ -516,7 +527,11 @@ const Navbar = () => {
                                   >
                                     <MenuItemButton
                                       onClick={() => {
-                                        navigate(item.path);
+                                        if (item.isExternal) {
+                                          window.open(item.externalUrl, '_blank', 'noopener,noreferrer');
+                                        } else {
+                                          navigate(item.path);
+                                        }
                                         handleMegaMenuClose();
                                       }}
                                     >
@@ -524,7 +539,11 @@ const Navbar = () => {
                                       <Typography className="menu-item-text">
                                         {item.title}
                                       </Typography>
-                                      <ArrowForwardIos className="arrow-icon" />
+                                      {item.isExternal ? (
+                                        <OpenInNew className="arrow-icon" sx={{ fontSize: '0.9rem' }} />
+                                      ) : (
+                                        <ArrowForwardIos className="arrow-icon" />
+                                      )}
                                     </MenuItemButton>
                                   </Tooltip>
                                 ))}
@@ -712,7 +731,11 @@ const Navbar = () => {
                   button
                   key={index}
                   onClick={() => {
-                    navigate(item.path);
+                    if (item.isExternal) {
+                      window.open(item.externalUrl, '_blank', 'noopener,noreferrer');
+                    } else {
+                      navigate(item.path);
+                    }
                     handleDrawerToggle();
                   }}
                   sx={{
@@ -733,6 +756,9 @@ const Navbar = () => {
                       sx: { fontWeight: 500 }
                     }}
                   />
+                  {item.isExternal && (
+                    <OpenInNew sx={{ fontSize: '0.9rem', ml: 1, opacity: 0.7 }} />
+                  )}
                 </ListItem>
               ))}
             </React.Fragment>

@@ -188,8 +188,6 @@ const SkillPath = () => {
     const [loadingEmployee, setLoadingEmployee] = useState(false);
     const [employeeError, setEmployeeError] = useState(null);
     const [initialLoading, setInitialLoading] = useState(true);
-    const [selectedCertificate, setSelectedCertificate] = useState(null);
-    const [certModalOpen, setCertModalOpen] = useState(false);
 
     const token = localStorage.getItem('token');
     const isAdmin = JSON.parse(localStorage.getItem('userData'))?.isAdmin;
@@ -212,11 +210,20 @@ const SkillPath = () => {
             setLoading(true);
             const headers = { 'Authorization': `Bearer ${token}` };
 
-            // Fetch employee profile with updated response format
+            // Fetch employee profile
             const profileResponse = await axios.get(`${BaseUrl}/employees/profile`, { headers });
+            // console.log('Profile Response:', profileResponse.data); // Debug log
             
-            // Update employeeData with the employee object from response
-            setEmployeeData(profileResponse.data.employee);
+            // Update employeeData with the direct response data
+            setEmployeeData({
+                ...profileResponse.data,
+                skills: profileResponse.data.skills || [],
+                previousCompanies: profileResponse.data.previousCompanies || [],
+                previousProjects: profileResponse.data.previousProjects || [],
+                certifications: profileResponse.data.certifications || [],
+                experience: profileResponse.data.experience || '0 years'
+                
+            });
 
             // If admin, fetch all employees
             if (isAdmin) {
@@ -821,163 +828,6 @@ const SkillPath = () => {
                                                 ))}
                                             </Box>
                                         </ProjectCard>
-                                    </motion.div>
-                                ))}
-                            </Box>
-                        </Box>
-
-                        {/* Certifications Section */}
-                        <Box sx={{ mt: 12 }}>
-                            <SectionTitle variant="h4">
-                                Certifications & Achievements
-                            </SectionTitle>
-                            <Box sx={{
-                                display: 'grid',
-                                gridTemplateColumns: {
-                                    xs: '1fr',
-                                    sm: 'repeat(auto-fill, minmax(280px, 1fr))',
-                                    md: 'repeat(auto-fill, minmax(320px, 1fr))',
-                                    lg: 'repeat(auto-fill, minmax(350px, 1fr))'
-                                },
-                                gap: { xs: 2, sm: 3, md: 4 },
-                                mt: 4,
-                                px: { xs: 2, sm: 0 }
-                            }}>
-                                {employeeData?.certifications?.map((cert, index) => (
-                                    <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                position: 'relative',
-                                                background: 'rgba(255, 255, 255, 0.8)',
-                                                backdropFilter: 'blur(10px)',
-                                                borderRadius: '20px',
-                                                overflow: 'hidden',
-                                                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                                                transition: 'all 0.3s ease',
-                                                cursor: 'pointer',
-                                                '&:hover': {
-                                                    transform: 'translateY(-10px)',
-                                                    boxShadow: '0 20px 40px rgba(49, 17, 136, 0.2)',
-                                                    '& .cert-overlay': {
-                                                        opacity: 1
-                                                    },
-                                                    '& .view-button': {
-                                                        opacity: 1,
-                                                        transform: 'translateY(0)'
-                                                    }
-                                                }
-                                            }}
-                                            onClick={() => {
-                                                setSelectedCertificate(cert);
-                                                setCertModalOpen(true);
-                                            }}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    height: '5px',
-                                                    background: 'linear-gradient(90deg, #311188, #22c55e)'
-                                                }}
-                                            />
-                                            <Box sx={{ p: 3 }}>
-                                                <Box sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 2,
-                                                    mb: 2
-                                                }}>
-                                                    <Avatar
-                                                        sx={{
-                                                            bgcolor: 'primary.main',
-                                                            width: { xs: 40, sm: 48 },
-                                                            height: { xs: 40, sm: 48 },
-                                                            boxShadow: '0 4px 12px rgba(49, 17, 136, 0.2)'
-                                                        }}
-                                                    >
-                                                        <School />
-                                                    </Avatar>
-                                                    <Box>
-                                                        <Typography
-                                                            variant="h6"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                color: 'primary.main',
-                                                                fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
-                                                                lineHeight: 1.2
-                                                            }}
-                                                        >
-                                                            {cert.name}
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                color: 'text.secondary',
-                                                                fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem' },
-                                                                mt: 0.5
-                                                            }}
-                                                        >
-                                                            {cert.issuer}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: 1,
-                                                        mb: 2
-                                                    }}
-                                                >
-                                                    <CalendarToday sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {format(new Date(cert.issueDate), 'MMM yyyy')}
-                                                    </Typography>
-                                                </Box>
-                                                <Button
-                                                    className="view-button"
-                                                    fullWidth
-                                                    variant="contained"
-                                                    startIcon={<OpenInNew />}
-                                                    sx={{
-                                                        mt: 2,
-                                                        background: 'linear-gradient(135deg, #311188, #22c55e)',
-                                                        color: 'white',
-                                                        borderRadius: '10px',
-                                                        textTransform: 'none',
-                                                        opacity: 0.9,
-                                                        transform: 'translateY(5px)',
-                                                        transition: 'all 0.3s ease',
-                                                        '&:hover': {
-                                                            background: 'linear-gradient(135deg, #22c55e, #311188)',
-                                                            opacity: 1
-                                                        }
-                                                    }}
-                                                >
-                                                    View Details
-                                                </Button>
-                                            </Box>
-                                            <Box
-                                                className="cert-overlay"
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    bottom: 0,
-                                                    background: 'linear-gradient(135deg, rgba(49, 17, 136, 0.1), rgba(34, 197, 94, 0.1))',
-                                                    opacity: 0,
-                                                    transition: 'opacity 0.3s ease'
-                                                }}
-                                            />
-                                        </Box>
                                     </motion.div>
                                 ))}
                             </Box>
@@ -1882,114 +1732,6 @@ const SkillPath = () => {
                     </>
                 )}
             </DetailModal>
-
-            {/* Certificate Modal */}
-            <Dialog
-                open={certModalOpen}
-                onClose={() => setCertModalOpen(false)}
-                maxWidth="md"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: '20px',
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(20px)',
-                        overflow: 'hidden'
-                    }
-                }}
-            >
-                {selectedCertificate && (
-                    <>
-                        <DialogTitle
-                            sx={{
-                                background: 'linear-gradient(135deg, #311188, #22c55e)',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                p: { xs: 2, sm: 3 }
-                            }}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <School sx={{ fontSize: { xs: 24, sm: 32 } }} />
-                                <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
-                                    Certificate Details
-                                </Typography>
-                            </Box>
-                            <IconButton
-                                onClick={() => setCertModalOpen(false)}
-                                sx={{ color: 'white' }}
-                            >
-                                <Close />
-                            </IconButton>
-                        </DialogTitle>
-                        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-                            <Box sx={{ mb: 3 }}>
-                                <Typography variant="h5" color="primary" gutterBottom fontWeight="600">
-                                    {selectedCertificate.name}
-                                </Typography>
-                                <Typography variant="subtitle1" color="text.secondary">
-                                    {selectedCertificate.issuer}
-                                </Typography>
-                            </Box>
-                            <Grid container spacing={3}>
-                                <Grid item xs={12} sm={6}>
-                                    <Box sx={{
-                                        p: 2,
-                                        borderRadius: '12px',
-                                        background: 'rgba(49, 17, 136, 0.05)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 2
-                                    }}>
-                                        <CalendarToday color="primary" />
-                                        <Box>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Issue Date
-                                            </Typography>
-                                            <Typography variant="body1" fontWeight="500">
-                                                {format(new Date(selectedCertificate.issueDate), 'MMMM dd, yyyy')}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </Grid>
-                                {selectedCertificate.certificateUrl && (
-                                    <Grid item xs={12}>
-                                        <Box sx={{
-                                            mt: 2,
-                                            p: 3,
-                                            borderRadius: '12px',
-                                            background: 'linear-gradient(135deg, rgba(49, 17, 136, 0.05), rgba(34, 197, 94, 0.05))',
-                                            textAlign: 'center'
-                                        }}>
-                                            <Typography variant="body1" gutterBottom>
-                                                View your certificate online
-                                            </Typography>
-                                            <Button
-                                                variant="contained"
-                                                startIcon={<OpenInNew />}
-                                                href={selectedCertificate.certificateUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                sx={{
-                                                    mt: 2,
-                                                    background: 'linear-gradient(135deg, #311188, #22c55e)',
-                                                    color: 'white',
-                                                    '&:hover': {
-                                                        background: 'linear-gradient(135deg, #22c55e, #311188)',
-                                                    }
-                                                }}
-                                            >
-                                                Open Certificate
-                                            </Button>
-                                        </Box>
-                                    </Grid>
-                                )}
-                            </Grid>
-                        </DialogContent>
-                    </>
-                )}
-            </Dialog>
         </PageContainer>
     );
 };

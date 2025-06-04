@@ -99,8 +99,9 @@ const StyledSearchBar = styled(Box)(({ theme }) => ({
     border: '1px solid rgba(255, 255, 255, 0.3)',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
     display: 'flex',
+    flexDirection: { xs: 'column', md: 'row' },
     gap: theme.spacing(2),
-    alignItems: 'center',
+    alignItems: 'stretch',
     transition: 'all 0.3s ease',
     '&:hover': {
         boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
@@ -192,7 +193,7 @@ const EmployeesPage = () => {
         gender: '',
     });
 
-    const roles = ['CEO', 'CTO', 'CFO', 'CMO', 'COO', 'CHRO', 'HR', 'Manager', 'Developer', 'DevOps', 'BDE', 'Support', 'UI/UX', 'Testing', 'Other'];
+    const roles = ['CEO', 'CTO', 'CFO', 'CMO', 'COO', 'CHRO', 'HR', 'Senior Manager', 'Manager', 'Developer', 'DevOps', 'BDE', 'Support', 'UI/UX', 'Testing', 'Other'];
     const teams = ['Operations', 'Technical', 'Finance', 'Marketing', 'Other'];
     const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
     const genders = ['Male', 'Female', 'Other'];
@@ -601,61 +602,87 @@ const EmployeesPage = () => {
                                 ),
                             }}
                             sx={{
+                                flex: { xs: '1', md: '2' },
                                 '& .MuiOutlinedInput-root': {
+                                    height: { xs: '45px', sm: '50px', md: '56px' },
                                     borderRadius: 2,
                                     bgcolor: 'background.paper',
+                                    fontSize: { xs: '14px', sm: '15px', md: '16px' }
                                 }
                             }}
                         />
-                        <FormControl sx={{ minWidth: 200 }}>
-                            <InputLabel>Filter by Role</InputLabel>
-                            <Select
-                                value={filterRole}
-                                onChange={(e) => setFilterRole(e.target.value)}
-                                label="Filter by Role"
-                                sx={{ bgcolor: 'background.paper', borderRadius: 2 }}
+                        <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            gap: 2,
+                            width: { xs: '100%', md: 'auto' }
+                        }}>
+                            <FormControl sx={{ 
+                                minWidth: { xs: '100%', sm: '200px' },
+                                flex: { xs: 1, md: 'initial' }
+                            }}>
+                                <InputLabel>Filter by Role</InputLabel>
+                                <Select
+                                    value={filterRole}
+                                    onChange={(e) => setFilterRole(e.target.value)}
+                                    label="Filter by Role"
+                                    sx={{ 
+                                        bgcolor: 'background.paper', 
+                                        borderRadius: 2,
+                                        height: { xs: '45px', sm: '50px', md: '56px' }
+                                    }}
+                                >
+                                    <MenuItem value="all">All Roles</MenuItem>
+                                    {roles.map(role => (
+                                        <MenuItem key={role} value={role}>{role}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <FormControl sx={{ 
+                                minWidth: { xs: '100%', sm: '200px' },
+                                flex: { xs: 1, md: 'initial' }
+                            }}>
+                                <InputLabel>Filter by Team</InputLabel>
+                                <Select
+                                    value={filterTeam}
+                                    onChange={(e) => setFilterTeam(e.target.value)}
+                                    label="Filter by Team"
+                                    sx={{ 
+                                        bgcolor: 'background.paper', 
+                                        borderRadius: 2,
+                                        height: { xs: '45px', sm: '50px', md: '56px' }
+                                    }}
+                                >
+                                    <MenuItem value="all">All Teams</MenuItem>
+                                    {teams.map(team => (
+                                        <MenuItem key={team} value={team}>{team}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <AnimatedButton
+                                startIcon={<Add />}
+                                onClick={() => setOpenDialog(true)}
+                                sx={{
+                                    borderRadius: '12px',
+                                    height: { xs: '45px', sm: '50px', md: '56px' },
+                                    width: { xs: '100%', sm: 'auto' },
+                                    minWidth: { sm: '160px', md: '180px' },
+                                    background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
+                                    padding: { xs: '8px 16px', sm: '10px 20px', md: '12px 24px' },
+                                    textTransform: 'none',
+                                    fontSize: { xs: '14px', sm: '15px', md: '16px' },
+                                    fontWeight: 600,
+                                    boxShadow: '0 4px 15px rgba(37, 99, 235, 0.2)',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3)',
+                                    }
+                                }}
                             >
-                                <MenuItem value="all">All Roles</MenuItem>
-                                {roles.map(role => (
-                                    <MenuItem key={role} value={role}>{role}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <FormControl sx={{ minWidth: 200 }}>
-                            <InputLabel>Filter by Team</InputLabel>
-                            <Select
-                                value={filterTeam}
-                                onChange={(e) => setFilterTeam(e.target.value)}
-                                label="Filter by Team"
-                                sx={{ bgcolor: 'background.paper', borderRadius: 2 }}
-                            >
-                                <MenuItem value="all">All Teams</MenuItem>
-                                {teams.map(team => (
-                                    <MenuItem key={team} value={team}>{team}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <AnimatedButton
-                            startIcon={<Add />}
-                            onClick={() => setOpenDialog(true)}
-                            sx={{
-                                borderRadius: '12px',
-                                height: '56px',
-                                background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
-                                transition: 'all 0.3s ease',
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                px: 4,
-                                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.2)',
-                                '&:hover': {
-                                    background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3)',
-                                }
-                            }}
-                        >
-                            Add Employee
-                        </AnimatedButton>
+                                Add Employee
+                            </AnimatedButton>
+                        </Box>
                     </StyledSearchBar>
                 </motion.div>
 

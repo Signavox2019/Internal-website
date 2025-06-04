@@ -161,7 +161,7 @@ const LoginPage = () => {
   };
 
   return (
-    <Box className="h-screen w-full flex overflow-hidden relative">
+    <Box className=" w-full flex overflow-hidden relative">
       {/* Toast Container for notifications */}
       <ToastContainer
         position="top-right"

@@ -496,6 +496,7 @@ export const CustomTimelineDot = styled('div')(({ theme, active }) => ({
 
 export const CustomTimelineContent = styled('div')(({ theme }) => ({
     flex: 1,
+    marginLeft: '20px',
     background: 'rgba(255, 255, 255, 0.8)',
     backdropFilter: 'blur(10px)',
     borderRadius: '20px',
@@ -535,6 +536,8 @@ export const CustomTimelineContent = styled('div')(({ theme }) => ({
 
 export const PageContainer = styled(Box)(({ theme }) => ({
     minHeight: '100vh',
+    width: '100%',
+    overflowX: 'hidden',
     background: 'linear-gradient(135deg, #f6f7ff 0%, #f0f3ff 100%)',
     padding: theme.spacing(4),
 }));

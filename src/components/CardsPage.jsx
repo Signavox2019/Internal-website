@@ -990,7 +990,7 @@ const CardsPage = () => {
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
           <Box sx={{
-            mb: 4,
+            mb: 1,
             p: 4,
             borderRadius: 4,
             // background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
@@ -1068,8 +1068,10 @@ const CardsPage = () => {
               width: '100%',
               maxWidth: '1200px',
               display: 'flex',
-              gap: 2,
-              px: 2
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 2, sm: 2 },
+              px: { xs: 1, sm: 2 },
+              alignItems: 'stretch'
             }}
           >
             <TextField
@@ -1086,14 +1088,19 @@ const CardsPage = () => {
               sx={{
                 flex: 1,
                 '& .MuiOutlinedInput-root': {
+                  height: { xs: '48px', sm: '56px' },
                   borderRadius: '12px',
                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
                   transition: 'all 0.3s ease',
+                  fontSize: { xs: '14px', sm: '16px' },
                   '&:hover, &.Mui-focused': {
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     transform: 'translateY(-2px)',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                   }
+                },
+                '& .MuiInputBase-input': {
+                  padding: { xs: '12px 14px', sm: '16px 14px' },
                 }
               }}
             />
@@ -1106,19 +1113,17 @@ const CardsPage = () => {
                 startIcon={<Add />}
                 sx={{
                   borderRadius: '12px',
-                  height: '56px',
-                  // background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  height: { xs: '48px', sm: '56px' },
+                  minWidth: { xs: '100%', sm: '180px' },
                   background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
-
                   transition: 'all 0.3s ease',
                   textTransform: 'none',
                   fontWeight: 600,
-                  px: 4,
+                  px: { xs: 2, sm: 4 },
+                  fontSize: { xs: '14px', sm: '16px' },
                   boxShadow: '0 4px 15px rgba(37, 99, 235, 0.2)',
                   '&:hover': {
-                    // background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
                     background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
-
                     transform: 'translateY(-2px)',
                     boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3)',
                   }
@@ -1134,7 +1139,7 @@ const CardsPage = () => {
             sx={{
               width: '100%',
               maxWidth: '1200px',
-              px: 2
+              px: { xs: 1, sm: 2 }
             }}
           >
             <Paper
@@ -1142,17 +1147,31 @@ const CardsPage = () => {
               sx={{
                 borderRadius: '12px',
                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 2,
+                width: '100%',
+                maxWidth: '1200px',
+                px: { xs: 1, sm: 2 },
+
               }}
             >
               <Tabs
                 value={currentTab}
                 onChange={handleTabChange}
-                variant="fullWidth"
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
                 sx={{
-                  minHeight: '48px',
+                  minHeight: { xs: '40px', sm: '48px' },
                   '& .MuiTab-root': {
-                    minHeight: '48px',
+                    minHeight: { xs: '40px', sm: '48px' },
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '6px 12px', sm: '8px 16px' },
                     fontWeight: 500,
                     color: 'text.secondary',
                     transition: 'all 0.3s ease',

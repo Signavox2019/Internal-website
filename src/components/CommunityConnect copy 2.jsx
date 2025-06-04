@@ -22,6 +22,7 @@ import {
     ZoomOut,
     CenterFocusStrong,
     ArrowUpward,
+
     Transgender,
     BusinessCenter,
     Engineering,
@@ -31,6 +32,7 @@ import {
     AccountBalance,
     SupervisorAccount,
     AdminPanelSettings,
+    Person,
 } from '@mui/icons-material';
 import axios from 'axios';
 import BaseUrl from '../Api';
@@ -144,32 +146,14 @@ const getRoleIcon = (role, gender) => {
         case 'bde':
             return <Support sx={{ fontSize: 24, color: 'white' }} />;
         default:
-            // For other roles, use gender-based images
+            // For other roles, use gender-based icons
             switch (gender?.toLowerCase()) {
                 case 'male':
-                    return <img 
-                        src={Man} 
-                        alt="Male Employee" 
-                        style={{ 
-                            width: '40px', 
-                            height: '40px',
-                            objectFit: 'contain',
-                            filter: 'brightness(0) invert(1)', // Makes the image white
-                            opacity: 0.9
-                        }} 
-                    />;
+                    // return <Man sx={{ fontSize: 24, color: 'white' }} />;
+                    return <img src={Man} alt="User" srcset="" />;
                 case 'female':
-                    return <img 
-                        src={Woman} 
-                        alt="Female Employee" 
-                        style={{ 
-                            width: '40px', 
-                            height: '40px',
-                            objectFit: 'contain',
-                            filter: 'brightness(0) invert(1)', // Makes the image white
-                            opacity: 0.9
-                        }} 
-                    />;
+                    return <img src={Woman} alt="User" srcset="" />;
+                // return <Woman sx={{ fontSize: 24, color: 'white' }} />;
                 default:
                     return <Transgender sx={{ fontSize: 24, color: 'white' }} />;
             }
@@ -178,9 +162,9 @@ const getRoleIcon = (role, gender) => {
 
 const CustomNode = ({ nodeDatum, toggleNode }) => {
     const isLeaf = !nodeDatum.children || nodeDatum.children.length === 0;
-    const nodeSize = nodeDatum.data.role === 'CEO' ? 45 : 
-                    nodeDatum.data.role === 'Department' ? 40 :
-                    nodeDatum.data.isTeamLead ? 35 : 30;
+    const nodeSize = nodeDatum.data.role === 'CEO' ? 45 :
+        nodeDatum.data.role === 'Department' ? 40 :
+            nodeDatum.data.isTeamLead ? 35 : 30;
     const isOnBench = nodeDatum.data.isOnBench && !['Executive', 'Operations', 'Recruitment', 'Finance'].includes(nodeDatum.data.team);
     const isTeamLead = nodeDatum.data.isTeamLead;
     const isDepartment = nodeDatum.data.role === 'Department';
@@ -188,9 +172,9 @@ const CustomNode = ({ nodeDatum, toggleNode }) => {
 
     // Calculate opacity based on bench status
     const nodeOpacity = isOnBench ? 0.6 : 1;
-    
+
     return (
-        <Tooltip 
+        <Tooltip
             title={
                 <div>
                     <Typography variant="subtitle2">{nodeDatum.data.name}</Typography>
@@ -206,7 +190,7 @@ const CustomNode = ({ nodeDatum, toggleNode }) => {
                                     Skills: {nodeDatum.data.skills.join(', ')}
                                 </Typography>
                             )}
-                            <Typography variant="caption" display="block" 
+                            <Typography variant="caption" display="block"
                                 style={{ color: nodeDatum.data.isAvailable ? '#4CAF50' : '#ff5252' }}>
                                 Status: {nodeDatum.data.isAvailable ? 'Available' : 'Busy'}
                             </Typography>
@@ -235,7 +219,7 @@ const CustomNode = ({ nodeDatum, toggleNode }) => {
                         style={{ opacity: nodeOpacity }}
                     />
                 )}
-                
+
                 {/* Node circle with gradient */}
                 <circle
                     r={nodeSize + 5}
@@ -243,7 +227,7 @@ const CustomNode = ({ nodeDatum, toggleNode }) => {
                     className="node-glow"
                     style={{ opacity: nodeOpacity * 0.6 }}
                 />
-                
+
                 {/* Main circle */}
                 <circle
                     r={nodeSize}
@@ -256,15 +240,14 @@ const CustomNode = ({ nodeDatum, toggleNode }) => {
 
                 {/* Role/Gender Icon */}
                 {!isDepartment && (
-                    <g transform={`translate(-${nodeSize}, -${nodeSize})`}>
+                    <g transform={`translate(-${nodeSize / 2}, -${nodeSize / 2})`}>
                         <foreignObject width={nodeSize * 2} height={nodeSize * 2}>
-                            <div style={{ 
-                                width: '100%', 
-                                height: '100%', 
-                                display: 'flex', 
-                                alignItems: 'center', 
+                            <div style={{
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
                                 justifyContent: 'center',
-                                transform: 'scale(1.2)', // Slightly larger images
                                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                             }}>
                                 {getRoleIcon(nodeDatum.data.role, nodeDatum.data.gender)}
@@ -650,6 +633,7 @@ const CommunityConnect = () => {
                 teamMembers.push({
                     name: "Bench Employees",
                     data: {
+
                         name: "Bench Employees",
                         role: "Group",
                         team: team,

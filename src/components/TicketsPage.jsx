@@ -60,9 +60,8 @@ import Swal from 'sweetalert2';
 
 const MetricCard = styled(motion.div)(({ theme, color }) => ({
   height: '100%',
-  width: '350px',
-  maxWidth: '500px',
-  minHeight: '200px',
+  width: '100%',
+  minHeight: '180px',
   borderRadius: '20px',
   background: `linear-gradient(165deg, 
     ${alpha(color, 0.12)} 0%, 
@@ -762,9 +761,29 @@ const TicketsPage = () => {
         </Box>
       </motion.div>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 4, display: 'flex', flexWrap: 'wrap' }}>
         {metricConfigs.map((metric, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index} >
+          <Grid 
+            item 
+            xs={12} 
+            sm={6} 
+            md={3} 
+            key={index}
+            sx={{
+              display: 'flex',
+              flexGrow: 1,
+              minWidth: {
+                xs: '100%',    // Full width on mobile
+                sm: '45%',     // ~Half width on tablets
+                md: '23%'      // ~Quarter width on desktop
+              },
+              maxWidth: {
+                xs: '100%',
+                sm: '45%',
+                md: '23%'
+              }
+            }}
+          >
             <MetricCard
               color={metric.color}
               initial={{ opacity: 0, y: 20 }}
@@ -785,15 +804,40 @@ const TicketsPage = () => {
                   {React.cloneElement(metric.icon, { sx: { fontSize: 28, color: metric.color } })}
                 </Box>
 
-                <Typography variant="h3" sx={{ fontWeight: 700, color: metric.color, mb: 1 }}>
+                <Typography variant="h3" sx={{ 
+                  fontWeight: 700, 
+                  color: metric.color, 
+                  mb: 1,
+                  fontSize: {
+                    xs: '2rem',    // Smaller font on mobile
+                    sm: '2.5rem',  // Medium font on tablets
+                    md: '3rem'     // Larger font on desktop
+                  }
+                }}>
                   {metric.value}
                 </Typography>
 
-                <Typography variant="h6" sx={{ color: alpha(metric.color, 0.9), fontWeight: 600, mb: 1 }}>
+                <Typography variant="h6" sx={{ 
+                  color: alpha(metric.color, 0.9), 
+                  fontWeight: 600, 
+                  mb: 1,
+                  fontSize: {
+                    xs: '1rem',
+                    sm: '1.1rem',
+                    md: '1.25rem'
+                  }
+                }}>
                   {metric.title}
                 </Typography>
 
-                <Typography variant="body2" sx={{ color: alpha(metric.color, 0.7) }}>
+                <Typography variant="body2" sx={{ 
+                  color: alpha(metric.color, 0.7),
+                  fontSize: {
+                    xs: '0.8rem',
+                    sm: '0.85rem',
+                    md: '0.875rem'
+                  }
+                }}>
                   {metric.description}
                 </Typography>
               </Box>
