@@ -194,7 +194,7 @@ const EmployeesPage = () => {
     });
 
     const roles = ['CEO', 'CTO', 'CFO', 'CMO', 'COO', 'CHRO', 'HR', 'Senior Manager', 'Manager', 'Developer', 'DevOps', 'BDE', 'Support', 'UI/UX', 'Testing', 'Other'];
-    const teams = ['Operations', 'Technical', 'Finance', 'Marketing', 'Other'];
+    const teams = ['Executive', 'Operations', 'Technical', 'Finance', 'Marketing', 'Other'];
     const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
     const genders = ['Male', 'Female', 'Other'];
 
@@ -611,13 +611,13 @@ const EmployeesPage = () => {
                                 }
                             }}
                         />
-                        <Box sx={{ 
-                            display: 'flex', 
+                        <Box sx={{
+                            display: 'flex',
                             flexDirection: { xs: 'column', sm: 'row' },
                             gap: 2,
                             width: { xs: '100%', md: 'auto' }
                         }}>
-                            <FormControl sx={{ 
+                            <FormControl sx={{
                                 minWidth: { xs: '100%', sm: '200px' },
                                 flex: { xs: 1, md: 'initial' }
                             }}>
@@ -626,8 +626,8 @@ const EmployeesPage = () => {
                                     value={filterRole}
                                     onChange={(e) => setFilterRole(e.target.value)}
                                     label="Filter by Role"
-                                    sx={{ 
-                                        bgcolor: 'background.paper', 
+                                    sx={{
+                                        bgcolor: 'background.paper',
                                         borderRadius: 2,
                                         height: { xs: '45px', sm: '50px', md: '56px' }
                                     }}
@@ -638,7 +638,7 @@ const EmployeesPage = () => {
                                     ))}
                                 </Select>
                             </FormControl>
-                            <FormControl sx={{ 
+                            <FormControl sx={{
                                 minWidth: { xs: '100%', sm: '200px' },
                                 flex: { xs: 1, md: 'initial' }
                             }}>
@@ -647,8 +647,8 @@ const EmployeesPage = () => {
                                     value={filterTeam}
                                     onChange={(e) => setFilterTeam(e.target.value)}
                                     label="Filter by Team"
-                                    sx={{ 
-                                        bgcolor: 'background.paper', 
+                                    sx={{
+                                        bgcolor: 'background.paper',
                                         borderRadius: 2,
                                         height: { xs: '45px', sm: '50px', md: '56px' }
                                     }}
@@ -876,7 +876,7 @@ const EmployeesPage = () => {
                             <Typography variant="h6" component="div" sx={{
                                 // background: 'linear-gradient(135deg, #2b5a9e 0%, #d9764a 100%)',
                                 // background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                                
+
                             }}>
                                 {isEditMode ? 'Edit Employee' : 'Register New Employee'}
                             </Typography>
@@ -1092,7 +1092,7 @@ const EmployeesPage = () => {
                             sx={{
                                 borderRadius: 2,
                                 // background: 'linear-gradient(135deg, #2b5a9e 0%, #d9764a 100%)',
-                                
+
                                 background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
                                 px: 4,
                                 '&:hover': {
