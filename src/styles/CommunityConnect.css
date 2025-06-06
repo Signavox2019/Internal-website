@@ -1,0 +1,184 @@
+/* Tree Link Styles */
+.tree-link {
+    stroke: #ccc;
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 5;
+    animation: dashdraw 3s linear infinite;
+    opacity: 0.6;
+    transition: all 0.3s ease-in-out;
+}
+
+.tree-link:hover {
+    stroke: #999;
+    stroke-width: 3;
+    opacity: 0.8;
+}
+
+@keyframes dashdraw {
+    from {
+        stroke-dashoffset: 20;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Node Styles */
+.node-glow {
+    opacity: 0.6;
+    filter: blur(4px);
+    transition: all 0.3s ease-in-out;
+}
+
+.node-main {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+    transition: all 0.3s ease-in-out;
+}
+
+/* Expand/Collapse Button Styles */
+.expand-collapse-btn {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.expand-collapse-btn:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* Special Background Styles */
+.special-background {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Info Card Styles */
+.info-card {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    transition: all 0.3s ease-in-out;
+}
+
+/* Team Indicator Styles */
+.team-indicator {
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.team-indicator::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        left: 100%;
+    }
+}
+
+/* Status Indicator */
+.status-indicator {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Department Label Styles */
+.department-label {
+    font-size: 16px;
+    font-weight: bold;
+    fill: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Info Text Styles */
+.info-text {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.info-text tspan {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Node Text Styles */
+.node-text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Tooltip Styles */
+.MuiTooltip-tooltip {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    color: #333 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 16px !important;
+    font-size: 12px !important;
+    max-width: 300px !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px);
+}
+
+.MuiTooltip-arrow {
+    color: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Tree Container Styles */
+.rd3t-tree-container {
+    background: transparent;
+    transition: all 0.3s ease-in-out;
+}
+
+.rd3t-node {
+    transition: all 0.3s ease-in-out;
+}
+
+.rd3t-leaf-node {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Custom Scrollbar */
+.tree-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.tree-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.tree-container::-webkit-scrollbar-thumb {
+    background: rgba(49, 17, 136, 0.6);
+    border-radius: 4px;
+}
+
+.tree-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(49, 17, 136, 0.8);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .tree-container {
+        height: calc(100vh - 200px);
+    }
+}
+
+@media (max-width: 768px) {
+    .tree-container {
+        height: calc(100vh - 150px);
+    }
+}

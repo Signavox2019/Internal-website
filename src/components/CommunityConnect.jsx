@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box, Container, Typography, Paper, CircularProgress,
     Avatar, Tooltip, alpha, useTheme, Zoom, IconButton,
-    Collapse
+    Collapse, Fab
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -11,10 +11,50 @@ import { Tree, TreeNode } from 'react-organizational-chart';
 import { styled } from '@mui/material/styles';
 import maleAvatar from '../assets/bussiness-man.png';
 import femaleAvatar from '../assets/businesswoman.png';
-import { ExpandMore, ExpandLess, AccountTree } from '@mui/icons-material';
+import { ExpandMore, ExpandLess, AccountTree, ZoomIn, ZoomOut, ZoomOutMap } from '@mui/icons-material';
+
+// Zoom Controls Styled Components
+const ZoomControls = styled(Box)(({ theme }) => ({
+    position: 'fixed',
+    bottom: theme.spacing(3),
+    right: theme.spacing(3),
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(1),
+    zIndex: 1000,
+}));
+
+const ZoomButton = styled(Fab)(({ theme }) => ({
+    backgroundColor: '#311188',
+    color: 'white',
+    width: 48,
+    height: 48,
+    '&:hover': {
+        backgroundColor: '#4527A0',
+    },
+    '& .MuiSvgIcon-root': {
+        fontSize: '1.2rem',
+    },
+}));
+
+// Tree Container with zoom functionality
+const ZoomableTreeContainer = styled(Box)(({ theme, zoom }) => ({
+    width: '100%',
+    height: '100vh',
+    overflow: 'hidden',
+    position: 'relative',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    '& > div': {
+        transform: `scale(${zoom})`,
+        transformOrigin: 'center center',
+        transition: 'transform 0.3s ease',
+    }
+}));
 
 // Styled Components
-const StyledNode = styled(Box)(({ theme, level, isCollapsed }) => ({
+const StyledNode = styled(Box)(({ theme, level, isCollapsed, zoom }) => ({
     padding: theme.spacing(2),
     borderRadius: '16px',
     background: 'rgba(255, 255, 255, 0.95)',
@@ -25,14 +65,17 @@ const StyledNode = styled(Box)(({ theme, level, isCollapsed }) => ({
                 level === 'Senior' ? '#5E35B1' :
                 level === 'Manager' ? '#673AB7' :
                 level === 'TeamLead' ? '#7E57C2' : '#9575CD',
-    minWidth: '220px',
-    maxWidth: '280px',
+    // Responsive sizing based on zoom level
+    width: zoom < 0.6 ? '180px' : zoom < 0.8 ? '200px' : '240px',
+    minHeight: zoom < 0.6 ? '120px' : zoom < 0.8 ? '140px' : '160px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center',
     transition: 'all 0.3s ease',
     cursor: 'pointer',
     position: 'relative',
+    margin: '0 auto', // Center the node
     boxShadow: isCollapsed ? 
         '0 4px 20px rgba(49, 17, 136, 0.2)' : 
         '0 4px 15px rgba(0, 0, 0, 0.1)',
@@ -106,15 +149,17 @@ const InfoOverlay = styled(Box)(({ theme }) => ({
     }
 }));
 
-const StyledAvatar = styled(Avatar)(({ theme, level }) => ({
-    width: level === 'CEO' ? 80 :
-          level === 'C-Level' ? 70 :
-          level === 'Senior' ? 65 :
-          level === 'Manager' ? 60 : 55,
-    height: level === 'CEO' ? 80 :
-           level === 'C-Level' ? 70 :
-           level === 'Senior' ? 65 :
-           level === 'Manager' ? 60 : 55,
+const StyledAvatar = styled(Avatar)(({ theme, level, zoom }) => ({
+    width: zoom < 0.6 ? 
+        (level === 'CEO' ? 50 : level === 'C-Level' ? 45 : level === 'Senior' ? 40 : level === 'Manager' ? 35 : 30) :
+        zoom < 0.8 ?
+        (level === 'CEO' ? 60 : level === 'C-Level' ? 55 : level === 'Senior' ? 50 : level === 'Manager' ? 45 : 40) :
+        (level === 'CEO' ? 70 : level === 'C-Level' ? 65 : level === 'Senior' ? 60 : level === 'Manager' ? 55 : 50),
+    height: zoom < 0.6 ? 
+        (level === 'CEO' ? 50 : level === 'C-Level' ? 45 : level === 'Senior' ? 40 : level === 'Manager' ? 35 : 30) :
+        zoom < 0.8 ?
+        (level === 'CEO' ? 60 : level === 'C-Level' ? 55 : level === 'Senior' ? 50 : level === 'Manager' ? 45 : 40) :
+        (level === 'CEO' ? 70 : level === 'C-Level' ? 65 : level === 'Senior' ? 60 : level === 'Manager' ? 55 : 50),
     border: '3px solid',
     borderColor: level === 'CEO' ? '#311188' :
                 level === 'C-Level' ? '#4527A0' :
@@ -126,8 +171,24 @@ const StyledAvatar = styled(Avatar)(({ theme, level }) => ({
     transition: 'all 0.3s ease',
 }));
 
-const StyledTree = styled(Tree)({
-    padding: '40px 0',
+// Custom Tree wrapper for better alignment
+const StyledTree = styled(Tree)(({ zoom }) => ({
+    '& .rst__tree': {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+    },
+    '& .rst__node': {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    '& .rst__nodeChildren': {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        gap: zoom < 0.6 ? '10px' : zoom < 0.8 ? '15px' : '20px',
+    },
     '& .rst__lineHalfHorizontalRight::before, & .rst__lineFullVertical::after, & .rst__lineHalfVerticalTop::after, & .rst__lineHalfVerticalBottom::after': {
         backgroundColor: '#311188',
         width: '2px',
@@ -135,13 +196,27 @@ const StyledTree = styled(Tree)({
     '& .rst__lineChildren::after': {
         backgroundColor: '#311188',
         width: '2px',
+    },
+    '& .rst__lineChildren': {
+        display: 'flex',
+        justifyContent: 'center',
+        position: 'relative',
     }
+}));
+
+// Custom TreeNode wrapper for consistent alignment
+const AlignedTreeNode = styled('div')({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    position: 'relative',
 });
 
-const RoleChip = styled(Box)(({ theme, level }) => ({
-    padding: '4px 12px',
+const RoleChip = styled(Box)(({ theme, level, zoom }) => ({
+    padding: zoom < 0.6 ? '2px 8px' : zoom < 0.8 ? '3px 10px' : '4px 12px',
     borderRadius: '12px',
-    fontSize: '0.75rem',
+    fontSize: zoom < 0.6 ? '0.65rem' : zoom < 0.8 ? '0.7rem' : '0.75rem',
     fontWeight: 600,
     backgroundColor: alpha(
         level === 'CEO' ? '#311188' :
@@ -156,17 +231,27 @@ const RoleChip = styled(Box)(({ theme, level }) => ({
            level === 'Senior' ? '#5E35B1' :
            level === 'Manager' ? '#673AB7' :
            level === 'TeamLead' ? '#7E57C2' : '#9575CD',
-    marginBottom: theme.spacing(1),
+    marginBottom: theme.spacing(0.5),
+    textAlign: 'center',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: zoom < 0.6 ? '140px' : zoom < 0.8 ? '170px' : '200px',
 }));
 
-const TeamChip = styled(Box)(({ theme }) => ({
-    padding: '4px 12px',
+const TeamChip = styled(Box)(({ theme, zoom }) => ({
+    padding: zoom < 0.6 ? '2px 8px' : zoom < 0.8 ? '3px 10px' : '4px 12px',
     borderRadius: '12px',
-    fontSize: '0.75rem',
+    fontSize: zoom < 0.6 ? '0.65rem' : zoom < 0.8 ? '0.7rem' : '0.75rem',
     fontWeight: 600,
     backgroundColor: alpha(theme.palette.secondary.main, 0.1),
     color: theme.palette.secondary.main,
-    marginBottom: theme.spacing(1),
+    marginBottom: theme.spacing(0.5),
+    textAlign: 'center',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: zoom < 0.6 ? '140px' : zoom < 0.8 ? '170px' : '200px',
 }));
 
 const CommunityConnect = () => {
@@ -174,6 +259,8 @@ const CommunityConnect = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [collapsedNodes, setCollapsedNodes] = useState(new Set());
+    const [zoom, setZoom] = useState(0.4); // Start with smaller zoom to fit everything
+    const treeContainerRef = useRef(null);
     const token = localStorage.getItem('token');
 
     useEffect(() => {
@@ -214,79 +301,112 @@ const CommunityConnect = () => {
         });
     };
 
+    const handleZoomIn = () => {
+        setZoom(prev => Math.min(prev + 0.1, 1.2));
+    };
+
+    const handleZoomOut = () => {
+        setZoom(prev => Math.max(prev - 0.1, 0.2));
+    };
+
+    const handleResetZoom = () => {
+        setZoom(0.4);
+    };
+
     const renderEmployeeNode = (employee, hasChildren = false) => {
         const level = getEmployeeLevel(employee.role);
         const isCollapsed = collapsedNodes.has(employee._id);
 
         return (
-            <Zoom in={true} style={{ transitionDelay: '100ms' }}>
-                <StyledNode level={level} isCollapsed={isCollapsed}>
-                    <Box sx={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <motion.div
-                            whileHover={{ scale: 1.1 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <StyledAvatar
-                                src={employee.gender === 'Male' ? maleAvatar : femaleAvatar}
-                                alt={employee.name}
-                                level={level}
-                            />
-                        </motion.div>
-                        
-                        <Typography 
-                            variant={level === 'CEO' ? 'h6' : 'subtitle1'} 
-                            fontWeight="bold" 
-                            gutterBottom
-                            sx={{ 
-                                fontSize: level === 'CEO' ? '1.25rem' : 
-                                        level === 'C-Level' ? '1.1rem' : '1rem',
-                                textAlign: 'center'
-                            }}
-                        >
-                            {employee.name}
-                        </Typography>
-
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-                            <RoleChip level={level}>{employee.role}</RoleChip>
-                            <TeamChip>{employee.team}</TeamChip>
-                        </Box>
-
-                        {hasChildren && (
-                            <CollapseButton
-                                size="small"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleCollapse(employee._id);
+            <AlignedTreeNode>
+                <Zoom in={true} style={{ transitionDelay: '100ms' }}>
+                    <StyledNode level={level} isCollapsed={isCollapsed} zoom={zoom}>
+                        <Box sx={{ 
+                            position: 'relative', 
+                            width: '100%', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textAlign: 'center'
+                        }}>
+                            <motion.div
+                                whileHover={{ scale: 1.1 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <StyledAvatar
+                                    src={employee.gender === 'Male' ? maleAvatar : femaleAvatar}
+                                    alt={employee.name}
+                                    level={level}
+                                    zoom={zoom}
+                                />
+                            </motion.div>
+                            
+                            <Typography 
+                                variant={level === 'CEO' ? 'h6' : 'subtitle1'} 
+                                fontWeight="bold" 
+                                gutterBottom
+                                sx={{ 
+                                    fontSize: level === 'CEO' ? '1.1rem' : 
+                                            level === 'C-Level' ? '1rem' : '0.9rem',
+                                    textAlign: 'center',
+                                    lineHeight: 1.2,
+                                    maxWidth: zoom < 0.6 ? '140px' : zoom < 0.8 ? '170px' : '200px',
+                                    wordWrap: 'break-word',
+                                    marginBottom: 1
                                 }}
                             >
-                                {isCollapsed ? <ExpandMore /> : <ExpandLess />}
-                            </CollapseButton>
-                        )}
+                                {employee.name}
+                            </Typography>
 
-                        <InfoOverlay className="info-overlay">
-                            <Typography variant="subtitle2" gutterBottom>
-                                Employee ID: {employee.employeeId}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                                Email: {employee.email}
-                            </Typography>
-                            {employee.experience && (
-                                <Typography variant="body2" gutterBottom>
-                                    Experience: {employee.experience}
-                                </Typography>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                flexDirection: 'column',
+                                gap: 0.5, 
+                                alignItems: 'center',
+                                width: '100%'
+                            }}>
+                                <RoleChip level={level} zoom={zoom}>{employee.role}</RoleChip>
+                                <TeamChip zoom={zoom}>{employee.team}</TeamChip>
+                            </Box>
+
+                            {hasChildren && (
+                                <CollapseButton
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleCollapse(employee._id);
+                                    }}
+                                >
+                                    {isCollapsed ? <ExpandMore /> : <ExpandLess />}
+                                </CollapseButton>
                             )}
-                            {employee.skills && employee.skills.length > 0 && (
-                                <Typography variant="body2" gutterBottom>
-                                    Skills: {employee.skills.map(s => s.name).join(', ')}
+
+                            <InfoOverlay className="info-overlay">
+                                <Typography variant="subtitle2" gutterBottom>
+                                    Employee ID: {employee.employeeId}
                                 </Typography>
-                            )}
-                            <Typography variant="body2" gutterBottom>
-                                Status: {employee.status}
-                            </Typography>
-                        </InfoOverlay>
-                    </Box>
-                </StyledNode>
-            </Zoom>
+                                <Typography variant="body2" gutterBottom>
+                                    Email: {employee.email}
+                                </Typography>
+                                {employee.experience && (
+                                    <Typography variant="body2" gutterBottom>
+                                        Experience: {employee.experience}
+                                    </Typography>
+                                )}
+                                {employee.skills && employee.skills.length > 0 && (
+                                    <Typography variant="body2" gutterBottom>
+                                        Skills: {employee.skills.map(s => s.name).join(', ')}
+                                    </Typography>
+                                )}
+                                <Typography variant="body2" gutterBottom>
+                                    Status: {employee.status}
+                                </Typography>
+                            </InfoOverlay>
+                        </Box>
+                    </StyledNode>
+                </Zoom>
+            </AlignedTreeNode>
         );
     };
 
@@ -322,17 +442,14 @@ const CommunityConnect = () => {
                 overflowY: 'auto',
                 padding: { xs: 2, sm: 4 },
                 minWidth: '100%',
-                '& .rst__tree': {
-                    padding: '40px 0',
-                    display: 'flex',
-                    justifyContent: 'center'
-                }
+                display: 'flex',
+                justifyContent: 'center',
             }}>
                 <StyledTree
                     lineWidth="2px"
                     lineColor="#311188"
                     lineBorderRadius="10px"
-                    nodePadding={50}
+                    nodePadding="40px"
                 >
                     {renderTreeNode(ceo, [
                         // CTO Branch
