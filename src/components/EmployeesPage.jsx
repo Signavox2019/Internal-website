@@ -193,7 +193,7 @@ const EmployeesPage = () => {
         gender: '',
     });
 
-    const roles = ['CEO', 'CTO', 'CFO', 'CMO', 'COO', 'CHRO', 'HR', 'Senior Manager', 'Manager', 'Developer', 'DevOps', 'BDE', 'Support', 'UI/UX', 'Testing', 'Other'];
+    const roles = ['CEO', 'CTO', 'CFO', 'CMO', 'COO', 'CHRO', 'HR', 'Senior Manager', 'Manager', 'Developer', 'DevOps', 'BDE', 'Support', 'UI/UX', 'Testing', 'Technical Team lead', 'Operations Team lead', 'Marketing Team lead', 'Other'];
     const teams = ['Executive', 'Operations', 'Technical', 'Finance', 'Marketing', 'Other'];
     const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
     const genders = ['Male', 'Female', 'Other'];
