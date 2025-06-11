@@ -225,7 +225,7 @@ const LoginPage = () => {
         <Box
           className={`${isMobile ? 'hidden' : 'flex'} lg:w-3/5 flex-col justify-between p-4 lg:p-12 text-white relative overflow-hidden`}
           sx={{
-            background: 'linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)), url("https://images.unsplash.com/photo-1557682250-33bd709cbe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80")',
+            background: 'linear-gradient(180deg, #311188, #0A081E), url("https://images.unsplash.com/photo-1557682250-33bd709cbe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             position: 'relative',
@@ -452,7 +452,8 @@ const LoginPage = () => {
                   <Avatar
                     className="w-24 h-24 relative"
                     sx={{
-                      background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)',
+                      // background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)',
+                      background: 'linear-gradient(90deg, #311188, #0A081E)',
                       boxShadow: '0 12px 24px -8px rgba(14, 165, 233, 0.5)',
                       border: '4px solid rgba(255, 255, 255, 0.8)'
                     }}
@@ -462,7 +463,8 @@ const LoginPage = () => {
                 </div>
                 <Typography
                   variant="h3"
-                  className="font-bold text-4xl mb-3 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"
+                  // className="font-bold text-4xl mb-3 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"
+                  className="font-bold text-4xl mb-3 bg-[#311188]  bg-clip-text text-transparent"
                 >
                   Welcome Back
                 </Typography>
@@ -492,7 +494,7 @@ const LoginPage = () => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Email className="text-blue-500" />
+                          <Email className="text-[#311188]" />
                         </InputAdornment>
                       ),
                       className: "bg-white/80 backdrop-blur-sm"
@@ -535,7 +537,7 @@ const LoginPage = () => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Lock className="text-blue-500" />
+                          <Lock className="text-[#311188]" />
                         </InputAdornment>
                       ),
                       endAdornment: (
@@ -585,7 +587,7 @@ const LoginPage = () => {
                 >
                   <Typography
                     variant="body2"
-                    className="text-blue-600 hover:text-blue-800 cursor-pointer font-medium"
+                    className="text-[#311188] hover:text-[#311188] cursor-pointer font-medium"
                     sx={{
                       transition: 'all 0.3s ease',
                       '&:hover': {
@@ -599,9 +601,11 @@ const LoginPage = () => {
                       sx={{
 
                         textTransform: 'none',
-                        color: '#3b82f6',
+                        color: '#311188',
                         '&:hover': {
-                          color: '#3b82f6',
+                          background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
                           textDecoration: 'underline'
                         },
                       }}
@@ -624,7 +628,8 @@ const LoginPage = () => {
                     disabled={loading}
                     className="relative overflow-hidden group"
                     sx={{
-                      background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)',
+                      // background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)',
+                      background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
                       borderRadius: '16px',
                       padding: '14px',
                       fontSize: '18px',
@@ -633,7 +638,8 @@ const LoginPage = () => {
                       transition: 'all 0.4s ease',
                       boxShadow: '0 8px 16px -4px rgba(14, 165, 233, 0.2)',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #0284c7, #2563eb)',
+                        // background: 'linear-gradient(135deg, #0284c7, #2563eb)',
+                        background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
                         transform: 'translateY(-2px)',
                         boxShadow: '0 12px 24px -6px rgba(14, 165, 233, 0.3)'
                       },

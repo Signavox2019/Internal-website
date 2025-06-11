@@ -174,22 +174,10 @@ const ForgotPasswordPage = () => {
     <Box className="h-screen w-full flex overflow-hidden relative">
       <ToastContainer theme="dark" />
 
-      {/* Full-screen background with parallax effect */}
-      <motion.div
-        className="absolute inset-0 bg-cover bg-center z-0"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1557682250-33bd709cbe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80')`,
-        }}
-        animate={{
-          x: calcParallaxX(30),
-          y: calcParallaxY(30),
-          scale: 1.1
-        }}
-        transition={{ type: "spring", stiffness: 10 }}
-      />
+      
 
       {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 to-indigo-900/90 z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-[#311188] to-[#0A081E] z-10"></div>
 
       {/* Main content */}
       <Container maxWidth="sm" className="relative z-20 flex items-center justify-center">
@@ -215,7 +203,7 @@ const ForgotPasswordPage = () => {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: 'primary.main',
+                  bgcolor: '#311188',
                   boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)'
                 }}
               >
@@ -231,7 +219,21 @@ const ForgotPasswordPage = () => {
           </Box>
 
           {/* Stepper */}
-          <Stepper activeStep={activeStep} className="mb-6">
+          <Stepper 
+            activeStep={activeStep} 
+            className="mb-6"
+            sx={{
+              '& .MuiStepLabel-root .Mui-active': {
+                color: '#311188',
+              },
+              '& .MuiStepIcon-root.Mui-active': {
+                color: '#311188',
+              },
+              '& .MuiStepIcon-root.Mui-completed': {
+                color: '#311188', 
+              }
+            }}
+          >
             <Step>
               <StepLabel>Request OTP</StepLabel>
             </Step>
@@ -254,7 +256,7 @@ const ForgotPasswordPage = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Email className="text-blue-500" />
+                      <Email className="text-[#311188]" />
                     </InputAdornment>
                   ),
                 }}
@@ -275,7 +277,11 @@ const ForgotPasswordPage = () => {
                   height: 56,
                   borderRadius: '12px',
                   textTransform: 'none',
-                  fontSize: '1.1rem'
+                  fontSize: '1.1rem',
+                  background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
+                  }
                 }}
               >
                 {loading ? <CircularProgress size={24} /> : 'Send OTP'}
@@ -308,7 +314,7 @@ const ForgotPasswordPage = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Lock className="text-blue-500" />
+                      <Lock className="text-[#311188]" />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -338,7 +344,7 @@ const ForgotPasswordPage = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Lock className="text-blue-500" />
+                      <Lock className="text-[#311188]" />
                     </InputAdornment>
                   ),
                   endAdornment: (
