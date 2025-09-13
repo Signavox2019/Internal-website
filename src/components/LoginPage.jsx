@@ -101,7 +101,7 @@ const LoginPage = () => {
           navigate('/landing');
         }
       }, 1000);
-      
+
     } catch (error) {
       console.error('Login error:', error);
 
@@ -161,7 +161,7 @@ const LoginPage = () => {
   };
 
   return (
-    <Box className=" w-full flex overflow-hidden relative">
+    <Box className="w-full h-screen flex overflow-hidden relative">
       {/* Toast Container for notifications */}
       <ToastContainer
         position="top-right"
@@ -223,7 +223,7 @@ const LoginPage = () => {
       <Box className="relative z-20 h-full w-full flex flex-col lg:flex-row">
         {/* Left side - Company info with background image */}
         <Box
-          className={`${isMobile ? 'hidden' : 'flex'} lg:w-3/5 flex-col justify-between p-4 lg:p-12 text-white relative overflow-hidden`}
+          className={`${isMobile ? 'hidden' : 'flex'} lg:w-5/7 flex-col justify-between p-2 lg:p-8 text-white relative overflow-hidden h-screen`}
           sx={{
             background: 'linear-gradient(180deg, #311188, #0A081E), url("https://images.unsplash.com/photo-1557682250-33bd709cbe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80")',
             backgroundSize: 'cover',
@@ -241,7 +241,7 @@ const LoginPage = () => {
             }
           }}
         >
-          <div className="relative z-10">
+          <div className="relative z-10 pointer-events-auto">
             {/* Logo placeholder - replace with your actual logo */}
             {/* <motion.img
               src={Logo}
@@ -250,23 +250,36 @@ const LoginPage = () => {
               // whileHover={{ rotate: 360, scale: 1.1 }}
               transition={{ duration: 0.8 }}
             /> */}
-            <Typography
-              variant="h2"
-              className="font-extrabold text-white tracking-tight flex items-center"
+            <Box
               sx={{
-                textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
-                letterSpacing: '-0.02em'
+                display: 'flex',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                width: '100%',
+                mb: -12, // Decreased margin bottom to reduce gap
+                mt: -14, // Decreased margin top
+                ml: -5, // Decreased margin left
+                zIndex: 10,
+                position: 'relative',
+                pointerEvents: 'auto',
               }}
             >
-              <span className="text-white">Sign</span>
-              <motion.img
-                src={Logo}
-                alt="Signavox Icon"
-                className="w-10 h-11 mt-2.5 object-contain"
+              <img
+                src={CompanyName}
+                alt="Signavox"
+                style={{
+                  maxWidth: '100%',
+                  height: 'auto',
+                  width: '350px',
+                  minWidth: '120px',
+                  objectFit: 'contain',
+                  pointerEvents: 'auto',
+                  userSelect: 'text',
+                }}
+                className="block"
               />
-              <span className="text-white">vox</span>
-            </Typography>
-            <Typography variant="body1" className="text-blue-100 text-xl font-light">
+            </Box>
+            <Typography variant="body1" className="text-blue-100 text-xl font-light pointer-events-auto select-text">
               Your All-in-One Company Portal
             </Typography>
 
@@ -276,16 +289,17 @@ const LoginPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="mb-2 "
+            className="mb-2 mt-4 pointer-events-auto select-text"
+            style={{ zIndex: 10, position: 'relative' }}
           >
-            <Typography variant="h3" className="font-bold text-4xl mb-6 tracking-tight">
+            <Typography variant="h3" className="font-bold text-3xl mb-4 tracking-tight select-text">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-200">
                 Everything you need,
               </span>
               <br />
               <span className="text-white">all in one place</span>
             </Typography>
-            <Typography variant="body1" className="text-blue-100 pt-4 text-xl leading-relaxed">
+            <Typography variant="body1" className="text-blue-100 pt-2 text-lg leading-relaxed select-text">
               Signavox brings together all your company resources, information, and tools in a single,
               easy-to-use platform designed to boost productivity and collaboration.
             </Typography>
@@ -295,20 +309,45 @@ const LoginPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="mt-0 px-4"
+            className="mt-0 pointer-events-auto"
+            style={{ zIndex: 10, position: 'relative' }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {features.map((feature, index) => (
                 <motion.div
                   key={index}
-                  className="relative group"
+                  className="relative group flex cursor-pointer transition-transform duration-200"
                   variants={itemVariants}
+                  style={{
+                    minWidth: 0,
+                  }}
+                  whileHover={{
+                    zIndex: 2,
+                    scale: 1.03,
+                    transition: {
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 20
+                    }
+                  }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-2xl blur-xl group-hover:opacity-100 opacity-0 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-2xl blur-xl group-hover:opacity-100 opacity-0 transition-opacity duration-300 pointer-events-none" />
                   <motion.div
-                    className="relative flex items-start space-x-4 p-6 rounded-2xl backdrop-blur-sm border border-white/10 bg-white/5"
+                    className="relative flex flex-col items-start space-y-3 p-4 rounded-2xl backdrop-blur-sm border border-white/10 bg-white/5 w-full transition-colors duration-300 group-hover:bg-white/10 group-hover:border-blue-300/30"
+                    style={{
+                      width: "100%",
+                      minHeight: "80px",
+                      height: "90px",
+                      maxHeight: "90px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-start",
+                    }}
                     whileHover={{
-                      scale: 1.02,
+                      scale: 1.04,
+                      boxShadow: "0 6px 32px 0 rgba(59,130,246,0.10), 0 1.5px 8px 0 rgba(99,102,241,0.10)",
+                      background: "rgba(255,255,255,0.10)",
+                      borderColor: "rgba(59,130,246,0.25)",
                       transition: {
                         type: "spring",
                         stiffness: 300,
@@ -316,21 +355,21 @@ const LoginPage = () => {
                       }
                     }}
                   >
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20 backdrop-blur-sm shadow-inner shadow-white/10">
+                    <div className="flex-shrink-0 flex items-center gap-3">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20 backdrop-blur-sm shadow-inner shadow-white/10 group-hover:bg-gradient-to-br group-hover:from-blue-400/40 group-hover:to-indigo-400/40 transition-colors duration-300">
                         {feature.icon}
                       </div>
-                    </div>
-                    <div className="flex-grow">
                       <Typography
                         variant="h6"
-                        className="font-semibold text-xl mb-2 bg-gradient-to-r from-blue-200 to-indigo-200 bg-clip-text text-transparent"
+                        className="font-semibold text-lg mb-1 bg-gradient-to-r from-blue-200 to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-100 group-hover:to-indigo-100 transition-colors duration-300"
                       >
                         {feature.title}
                       </Typography>
+                    </div>
+                    <div className="flex-grow -mt-1 flex flex-col justify-start">
                       <Typography
                         variant="body2"
-                        className="text-blue-100 opacity-90 leading-relaxed"
+                        className="text-blue-100 opacity-90 leading-relaxed text-sm group-hover:text-white transition-colors duration-300"
                       >
                         {feature.description}
                       </Typography>
@@ -343,22 +382,23 @@ const LoginPage = () => {
 
 
           <motion.div
-            className="text-sm text-blue-200 mt-16 flex justify-between items-center"
+            className="text-sm text-blue-200 mt-4 flex justify-between items-center pointer-events-auto select-text"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.8 }}
+            style={{ zIndex: 10, position: 'relative' }}
           >
-            <div>© {new Date().getFullYear()} Signavox. All rights reserved.</div>
+            <div className="select-text">© {new Date().getFullYear()} Signavox. All rights reserved.</div>
             <div className="flex space-x-4">
-              <span className="hover:text-white cursor-pointer transition-colors duration-300">Privacy Policy</span>
-              <span className="hover:text-white cursor-pointer transition-colors duration-300">Terms of Service</span>
+              <span className="hover:text-white cursor-pointer transition-colors duration-300 select-text">Privacy Policy</span>
+              <span className="hover:text-white cursor-pointer transition-colors duration-300 select-text">Terms of Service</span>
             </div>
           </motion.div>
         </Box>
 
         {/* Right side - Login form */}
         <Box
-          className={`w-full ${isMobile ? 'w-full' : 'lg:w-2/5'} flex items-center justify-center p-8 md:p-12 relative`}
+          className={`w-full ${isMobile ? 'w-full' : 'lg:w-2/5'} flex items-center justify-center p-6 md:p-6 relative h-screen`}
           sx={{
             background: 'linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%)',
             position: 'relative',
@@ -378,45 +418,7 @@ const LoginPage = () => {
           }}
         >
           {/* Animated background elements */}
-          <div className="absolute inset-0">
-            <motion.div
-              className="absolute top-0 right-0 w-[600px] h-[600px] opacity-[0.07]"
-              initial={{ scale: 0.8, rotate: -45 }}
-              animate={{
-                scale: [0.8, 1, 0.8],
-                rotate: [-45, -30, -45],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              style={{
-                background: 'conic-gradient(from 0deg at 50% 50%, #0ea5e9 0%, #3b82f6 25%, #0ea5e9 50%, #3b82f6 75%, #0ea5e9 100%)',
-                borderRadius: '38% 62% 63% 37% / 41% 44% 56% 59%',
-                filter: 'blur(40px)',
-              }}
-            />
-            <motion.div
-              className="absolute bottom-0 left-0 w-[500px] h-[500px] opacity-[0.05]"
-              initial={{ scale: 0.8, rotate: 45 }}
-              animate={{
-                scale: [0.8, 1, 0.8],
-                rotate: [45, 60, 45],
-              }}
-              transition={{
-                duration: 10,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 1
-              }}
-              style={{
-                background: 'conic-gradient(from 180deg at 50% 50%, #3b82f6 0%, #0ea5e9 25%, #3b82f6 50%, #0ea5e9 75%, #3b82f6 100%)',
-                borderRadius: '63% 37% 38% 62% / 56% 59% 41% 44%',
-                filter: 'blur(40px)',
-              }}
-            />
-          </div>
+         
 
           <Container maxWidth="sm" className="relative z-10">
             <motion.div
@@ -474,19 +476,19 @@ const LoginPage = () => {
               </motion.div>
 
               {/* Login Form */}
-              <form onSubmit={handleSubmit} className="space-y-8">
+              <form onSubmit={handleSubmit} className="space-y-1">
                 <motion.div
                   initial={{ x: -30, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="flex flex-col gap-6"
+                  className="flex flex-col gap-4"
                 >
                   <TextField
                     fullWidth
-                    label="Email"
+                    label="Email Address"
                     name="email"
                     type="email"
-                    placeholder='Enter your email'
+                    placeholder='Enter your email address'
                     value={formData.email}
                     onChange={handleChange}
                     required
@@ -494,31 +496,51 @@ const LoginPage = () => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Email className="text-[#311188]" />
+                          <Email className="text-[#311188] text-xl" />
                         </InputAdornment>
                       ),
-                      className: "bg-white/80 backdrop-blur-sm"
+                      className: "bg-white/90 backdrop-blur-sm"
                     }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        borderRadius: '16px',
-                        height: '56px',
-                        transition: 'all 0.3s ease',
-                        border: '1px solid rgba(59, 130, 246, 0.1)',
+                        borderRadius: '20px',
+                        height: '64px',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        border: '2px solid rgba(49, 17, 136, 0.1)',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%)',
+                        backdropFilter: 'blur(10px)',
                         '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 20px rgba(14, 165, 233, 0.12)',
-                          border: '1px solid rgba(59, 130, 246, 0.2)'
+                          transform: 'translateY(-3px)',
+                          boxShadow: '0 12px 32px rgba(49, 17, 136, 0.15), 0 4px 16px rgba(49, 17, 136, 0.1)',
+                          border: '2px solid rgba(49, 17, 136, 0.25)',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
                         },
                         '&.Mui-focused': {
-                          boxShadow: '0 6px 20px rgba(14, 165, 233, 0.15)',
-                          border: '1px solid rgba(59, 130, 246, 0.3)'
+                          boxShadow: '0 16px 40px rgba(49, 17, 136, 0.2), 0 6px 20px rgba(49, 17, 136, 0.15)',
+                          border: '2px solid rgba(49, 17, 136, 0.4)',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%)',
+                          transform: 'translateY(-2px)',
                         }
                       },
                       '& .MuiInputLabel-root': {
                         color: '#64748b',
+                        fontSize: '14px',
+                        fontWeight: '600',
                         '&.Mui-focused': {
-                          color: '#3b82f6'
+                          color: '#311188',
+                          fontWeight: '700'
+                        }
+                      },
+                      '& .MuiInputBase-input': {
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        color: '#1e293b',
+                        '&::placeholder': {
+                          color: '#94a3b8',
+                          opacity: 1,
+                          fontSize: '15px'
                         }
                       }
                     }}
@@ -537,7 +559,7 @@ const LoginPage = () => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Lock className="text-[#311188]" />
+                          <Lock className="text-[#311188] text-xl" />
                         </InputAdornment>
                       ),
                       endAdornment: (
@@ -545,34 +567,62 @@ const LoginPage = () => {
                           <IconButton
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
-                            className="text-blue-500 hover:text-blue-600"
+                            sx={{
+                              color: '#311188',
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                color: '#0A081E',
+                                backgroundColor: 'rgba(49, 17, 136, 0.1)',
+                                transform: 'scale(1.1)'
+                              }
+                            }}
                           >
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
                       ),
-                      className: "bg-white/80 backdrop-blur-sm"
+                      className: "bg-white/90 backdrop-blur-sm"
                     }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        borderRadius: '16px',
-                        height: '56px',
-                        transition: 'all 0.3s ease',
-                        border: '1px solid rgba(59, 130, 246, 0.1)',
+                        borderRadius: '20px',
+                        height: '64px',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        border: '2px solid rgba(49, 17, 136, 0.1)',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%)',
+                        backdropFilter: 'blur(10px)',
                         '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 20px rgba(14, 165, 233, 0.12)',
-                          border: '1px solid rgba(59, 130, 246, 0.2)'
+                          transform: 'translateY(-3px)',
+                          boxShadow: '0 12px 32px rgba(49, 17, 136, 0.15), 0 4px 16px rgba(49, 17, 136, 0.1)',
+                          border: '2px solid rgba(49, 17, 136, 0.25)',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
                         },
                         '&.Mui-focused': {
-                          boxShadow: '0 6px 20px rgba(14, 165, 233, 0.15)',
-                          border: '1px solid rgba(59, 130, 246, 0.3)'
+                          boxShadow: '0 16px 40px rgba(49, 17, 136, 0.2), 0 6px 20px rgba(49, 17, 136, 0.15)',
+                          border: '2px solid rgba(49, 17, 136, 0.4)',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%)',
+                          transform: 'translateY(-2px)',
                         }
                       },
                       '& .MuiInputLabel-root': {
                         color: '#64748b',
+                        fontSize: '14px',
+                        fontWeight: '600',
                         '&.Mui-focused': {
-                          color: '#3b82f6'
+                          color: '#311188',
+                          fontWeight: '700'
+                        }
+                      },
+                      '& .MuiInputBase-input': {
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        color: '#1e293b',
+                        '&::placeholder': {
+                          color: '#94a3b8',
+                          opacity: 1,
+                          fontSize: '15px'
                         }
                       }
                     }}
