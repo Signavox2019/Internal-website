@@ -20,6 +20,8 @@ import InsurancePage from './components/InsurancePage';
 import JobFeed from './components/JobFeed';
 import EmergencyContactPage from './components/EmergencyContact';
 import CommunityConnect from './components/CommunityConnect';
+import AdminAssignments from './components/AdminAssignments';
+import UserAssignments from './components/UserAssignments';
 
 const theme = createTheme({
   palette: {
@@ -115,6 +117,16 @@ function App() {
             <Route path="/job-feed" element={
               <ProtectedRoute>
                 <JobFeed />
+              </ProtectedRoute>
+            } />
+            <Route path="/assignments" element={
+              <ProtectedRoute>
+                <UserAssignments />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/assignments" element={
+              <ProtectedRoute adminOnly={true}>
+                <AdminAssignments />
               </ProtectedRoute>
             } />
             <Route path="/emergency" element={

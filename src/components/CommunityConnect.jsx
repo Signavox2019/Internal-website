@@ -17,7 +17,7 @@ import { ExpandMore, ExpandLess, AccountTree, ZoomIn, ZoomOut, ZoomOutMap } from
 const ZoomControls = styled(Box)(({ theme }) => ({
     position: 'fixed',
     bottom: theme.spacing(3),
-    right: theme.spacing(3),
+    left: theme.spacing(3),
     display: 'flex',
     flexDirection: 'column',
     gap: theme.spacing(1),
@@ -40,8 +40,8 @@ const ZoomButton = styled(Fab)(({ theme }) => ({
 // Tree Container with zoom functionality
 const ZoomableTreeContainer = styled(Box)(({ theme, zoom }) => ({
     width: '100%',
-    height: '100vh',
-    overflow: 'hidden',
+    height: '80vh',
+    overflow: 'auto',
     position: 'relative',
     display: 'flex',
     justifyContent: 'center',
@@ -50,6 +50,11 @@ const ZoomableTreeContainer = styled(Box)(({ theme, zoom }) => ({
         transform: `scale(${zoom})`,
         transformOrigin: 'center center',
         transition: 'transform 0.3s ease',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 }));
 
@@ -127,17 +132,24 @@ const InfoOverlay = styled(Box)(({ theme }) => ({
     position: 'absolute',
     top: '100%',
     left: '50%',
-    transform: 'translateX(-50%) translateY(-10px)',
+    transform: 'translateX(-50%) translateY(8px)',
     background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
     color: 'white',
-    padding: theme.spacing(2),
+    padding: theme.spacing(1.5),
     borderRadius: '12px',
     zIndex: 20,
     opacity: 0,
     visibility: 'hidden',
     transition: 'all 0.3s ease',
-    width: '300px',
+    minWidth: '250px',
+    maxWidth: '320px',
+    width: 'auto',
+    wordWrap: 'break-word',
+    overflowWrap: 'break-word',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+    // Prevent overflow
+    whiteSpace: 'normal',
+    overflow: 'visible',
     '&::before': {
         content: '""',
         position: 'absolute',
@@ -146,6 +158,29 @@ const InfoOverlay = styled(Box)(({ theme }) => ({
         transform: 'translateX(-50%)',
         border: '8px solid transparent',
         borderBottomColor: '#311188',
+    },
+    // Responsive positioning
+    '@media (max-width: 768px)': {
+        left: '50%',
+        transform: 'translateX(-50%) translateY(8px)',
+        maxWidth: '280px',
+        minWidth: '200px',
+        '&::before': {
+            left: '50%',
+            transform: 'translateX(-50%)',
+        }
+    },
+    '@media (max-width: 480px)': {
+        left: '10px',
+        right: '10px',
+        transform: 'translateY(8px)',
+        width: 'auto',
+        maxWidth: 'none',
+        minWidth: 'auto',
+        '&::before': {
+            left: '20px',
+            transform: 'none',
+        }
     }
 }));
 
@@ -383,23 +418,66 @@ const CommunityConnect = () => {
                             )}
 
                             <InfoOverlay className="info-overlay">
-                                <Typography variant="subtitle2" gutterBottom>
+                                <Typography 
+                                    variant="subtitle2" 
+                                    gutterBottom
+                                    sx={{ 
+                                        fontSize: '0.8rem',
+                                        fontWeight: 600,
+                                        wordBreak: 'break-word',
+                                        lineHeight: 1.3
+                                    }}
+                                >
                                     Employee ID: {employee.employeeId}
                                 </Typography>
-                                <Typography variant="body2" gutterBottom>
+                                <Typography 
+                                    variant="body2" 
+                                    gutterBottom
+                                    sx={{ 
+                                        fontSize: '0.75rem',
+                                        wordBreak: 'break-word',
+                                        lineHeight: 1.3,
+                                        overflowWrap: 'break-word'
+                                    }}
+                                >
                                     Email: {employee.email}
                                 </Typography>
                                 {employee.experience && (
-                                    <Typography variant="body2" gutterBottom>
+                                    <Typography 
+                                        variant="body2" 
+                                        gutterBottom
+                                        sx={{ 
+                                            fontSize: '0.75rem',
+                                            wordBreak: 'break-word',
+                                            lineHeight: 1.3
+                                        }}
+                                    >
                                         Experience: {employee.experience}
                                     </Typography>
                                 )}
                                 {employee.skills && employee.skills.length > 0 && (
-                                    <Typography variant="body2" gutterBottom>
+                                    <Typography 
+                                        variant="body2" 
+                                        gutterBottom
+                                        sx={{ 
+                                            fontSize: '0.75rem',
+                                            wordBreak: 'break-word',
+                                            lineHeight: 1.3,
+                                            overflowWrap: 'break-word'
+                                        }}
+                                    >
                                         Skills: {employee.skills.map(s => s.name).join(', ')}
                                     </Typography>
                                 )}
-                                <Typography variant="body2" gutterBottom>
+                                <Typography 
+                                    variant="body2" 
+                                    gutterBottom
+                                    sx={{ 
+                                        fontSize: '0.75rem',
+                                        wordBreak: 'break-word',
+                                        lineHeight: 1.3
+                                    }}
+                                >
                                     Status: {employee.status}
                                 </Typography>
                             </InfoOverlay>
@@ -425,11 +503,11 @@ const CommunityConnect = () => {
     };
 
     const findEmployeesByRole = (role) => {
-        return employees.filter(emp => emp.role === role);
+        return employees.filter(emp => emp.role === role && emp.status === 'Active');
     };
 
     const findEmployeesByTeamAndRole = (team, role) => {
-        return employees.filter(emp => emp.team === team && emp.role === role);
+        return employees.filter(emp => emp.team === team && emp.role === role && emp.status === 'Active');
     };
 
     const renderHierarchy = () => {
@@ -438,18 +516,19 @@ const CommunityConnect = () => {
 
         return (
             <Box sx={{ 
-                overflowX: 'auto',
-                overflowY: 'auto',
-                padding: { xs: 2, sm: 4 },
-                minWidth: '100%',
+                width: '100%',
+                height: '100%',
                 display: 'flex',
                 justifyContent: 'center',
+                alignItems: 'center',
+                padding: { xs: 2, sm: 4 },
             }}>
                 <StyledTree
                     lineWidth="2px"
                     lineColor="#311188"
                     lineBorderRadius="10px"
                     nodePadding="40px"
+                    zoom={zoom}
                 >
                     {renderTreeNode(ceo, [
                         // CTO Branch
@@ -464,7 +543,8 @@ const CommunityConnect = () => {
                                                         ...employees
                                                             .filter(emp => 
                                                                 emp.team === 'Technical' && 
-                                                                ['Developer', 'DevOps', 'UI/UX', 'Testing'].includes(emp.role)
+                                                                ['Developer', 'DevOps', 'UI/UX', 'Testing'].includes(emp.role) &&
+                                                                emp.status === 'Active'
                                                             )
                                                             .map(staff => renderTreeNode(staff, []))
                                                     ])
@@ -486,7 +566,8 @@ const CommunityConnect = () => {
                                                 ...employees
                                                     .filter(emp => 
                                                         emp.team === 'Finance' && 
-                                                        !['CFO', 'Senior Manager', 'Manager'].includes(emp.role)
+                                                        !['CFO', 'Senior Manager', 'Manager'].includes(emp.role) &&
+                                                        emp.status === 'Active'
                                                     )
                                                     .map(staff => renderTreeNode(staff, []))
                                             ])
@@ -506,7 +587,8 @@ const CommunityConnect = () => {
                                                 ...employees
                                                     .filter(emp => 
                                                         emp.team === 'Marketing' && 
-                                                        ['BDE', 'Support'].includes(emp.role)
+                                                        ['BDE', 'Support'].includes(emp.role) &&
+                                                        emp.status === 'Active'
                                                     )
                                                     .map(staff => renderTreeNode(staff, []))
                                             ])
@@ -528,7 +610,8 @@ const CommunityConnect = () => {
                                                         ...employees
                                                             .filter(emp => 
                                                                 emp.team === 'Operations' && 
-                                                                !['COO', 'Manager', 'HR', 'Operations Team lead'].includes(emp.role)
+                                                                !['COO', 'Manager', 'HR', 'Operations Team lead'].includes(emp.role) &&
+                                                                emp.status === 'Active'
                                                             )
                                                             .map(staff => renderTreeNode(staff, []))
                                                     ])
@@ -605,19 +688,38 @@ const CommunityConnect = () => {
                     background: 'rgba(255, 255, 255, 0.9)',
                     backdropFilter: 'blur(10px)',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                    overflowX: 'auto',
-                    '& > div': {
-                        minWidth: 'fit-content'
-                    }
+                    overflow: 'hidden',
+                    position: 'relative',
                 }}>
                     {loading ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                             <CircularProgress />
                         </Box>
                     ) : (
-                        renderHierarchy()
+                        <ZoomableTreeContainer zoom={zoom} ref={treeContainerRef}>
+                            {renderHierarchy()}
+                        </ZoomableTreeContainer>
                     )}
                 </Paper>
+
+                {/* Zoom Controls */}
+                <ZoomControls>
+                    <Tooltip title="Zoom In" placement="right">
+                        <ZoomButton onClick={handleZoomIn}>
+                            <ZoomIn />
+                        </ZoomButton>
+                    </Tooltip>
+                    <Tooltip title="Zoom Out" placement="right">
+                        <ZoomButton onClick={handleZoomOut}>
+                            <ZoomOut />
+                        </ZoomButton>
+                    </Tooltip>
+                    <Tooltip title="Reset Zoom" placement="right">
+                        <ZoomButton onClick={handleResetZoom}>
+                            <ZoomOutMap />
+                        </ZoomButton>
+                    </Tooltip>
+                </ZoomControls>
             </Container>
         </Box>
     );

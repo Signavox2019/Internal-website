@@ -79,6 +79,7 @@ import BaseUrl from '../Api';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '@mui/lab';
 import styled from '@emotion/styled';
+import CompanyName from '../assets/signavox1.png';
 
 const MegaMenuPopper = styled(Popper)(({ theme }) => ({
   zIndex: 1100,
@@ -213,6 +214,7 @@ const Navbar = () => {
     // { title: 'Employees', path: '/employees', icon: <People />, adminOnly: true },
     { title: 'Cards', path: '/cards', icon: <CreditCard />, showAlways: true },
     { title: 'Quick Links', path: '/quick-links', icon: <LinkIcon />, showAlways: true },
+    { title: 'Assignments', path: '/assignments', icon: <WorkIcon />, showAlways: true },
     // { title: 'Tickets', path: '/tickets', icon: <ConfirmationNumber />, adminOnly: true },
     // { title: 'Raise Ticket', path: '/tickets', icon: <ConfirmationNumber />, nonAdminOnly: true },
     // { title: 'Job Feed', path: '/job-feed', icon: <Work />, showAlways: true },
@@ -234,12 +236,12 @@ const Navbar = () => {
       title: 'Help Desk',
       icon: <SupportIcon />,
       items: [
-        { 
-          title: 'Payroll', 
-          icon: <PayrollIcon />, 
-          externalUrl: 'https://payroll.wisetechboard.com/myprofile',
-          isExternal: true 
-        },
+        // { 
+        //   title: 'Payroll', 
+        //   icon: <PayrollIcon />, 
+        //   externalUrl: 'https://payroll.wisetechboard.com/myprofile',
+        //   isExternal: true 
+        // },
         { title: 'Emergency Contact', icon: <EmergencyIcon />, path: '/emergency' },
         { title: 'Tickets', icon: <TicketsIcon />, path: '/tickets' },
         // { title: 'Service Central', icon: <ServiceIcon />, path: '/service' },
@@ -251,6 +253,7 @@ const Navbar = () => {
       icon: <BuildIcon />,
       items: [
         { title: 'Skill Path', icon: <SkillPathIcon />, path: '/skill-path' },
+        ...(isAdmin ? [{ title: 'Manage Assignments', icon: <WorkIcon />, path: '/admin/assignments' }] : []),
         // { title: 'Office Pass', icon: <OfficePassIcon />, path: '/office-pass' },
         { 
           title: 'Time Card', 
@@ -376,13 +379,13 @@ const Navbar = () => {
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <motion.img
-              src={Logo}
+              src={CompanyName}
               alt="Signavox Logo"
               style={{ height: 40, marginRight: 16 }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             />
-            <Typography
+            {/* <Typography
               variant="h6"
               sx={{
                 color: 'black',
@@ -391,7 +394,7 @@ const Navbar = () => {
               }}
             >
               Signavox
-            </Typography>
+            </Typography> */}
           </Box>
 
           {!isMobile && (
