@@ -33,7 +33,7 @@ const ContentTypeSelector = styled(Box)(({ theme }) => ({
 
 // Update the StyledCard component
 const StyledCard = styled(Card)(() => ({
-  height: '450px',
+  height: '350px',
   width: '300px',
   display: 'flex',
   flexDirection: 'column',
@@ -57,6 +57,7 @@ const StyledCard = styled(Card)(() => ({
     '& .card-image-overlay': {
       opacity: 1,
     },
+    // Text overlay remains visible by default; description fades in via CardImage hover
     '& .card-actions': {
       opacity: 1,
       transform: 'translateY(0)',
@@ -89,7 +90,7 @@ const StyledCard = styled(Card)(() => ({
 
 // Update the CardImage component
 const CardImage = styled(Box)(({ theme }) => ({
-  height: '250px',
+  height: '100%',
   width: '100%',
   overflow: 'hidden',
   position: 'relative',
@@ -100,7 +101,7 @@ const CardImage = styled(Box)(({ theme }) => ({
 
   '& img.card-image': {
     width: '100%',
-    height: '250px',
+    height: '100%',
     objectFit: 'cover',
     transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
   },
@@ -130,10 +131,32 @@ const CardImage = styled(Box)(({ theme }) => ({
     zIndex: 2,
   },
 
+  '& .card-text-overlay': {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: theme.spacing(2.5),
+    background:
+      'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.0) 100%)',
+    color: 'white',
+    zIndex: 3,
+    opacity: 1,
+    transform: 'translateY(0)',
+    transition: 'all 0.3s ease-in-out',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(0.5),
+  },
+
   '&:hover': {
     '&::before': {
       opacity: 0.8,
     },
+    '& .card-description-text': {
+      opacity: 1,
+      maxHeight: '90px'
+    }
   }
 }));
 
@@ -1241,9 +1264,17 @@ const CardsPage = () => {
                     <CardTypeIcon type={card.type} />
                   )}
                   <div className="card-image-overlay" />
+                  <Box className="card-text-overlay">
+                    <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                      {card.title}
+                    </Typography>
+                    <Typography variant="body2" className="card-description-text" sx={{ opacity: 0.9, transition: 'opacity 0.3s ease-in-out', opacity: 0, maxHeight: 0, overflow: 'hidden' }}>
+                      {getTruncatedContent(formatDescription(card.description))}
+                    </Typography>
+                  </Box>
                 </CardImage>
 
-                {/* Chip */}
+                {/* Type chip (restored) */}
                 <Box
                   sx={{
                     position: 'absolute',
@@ -1313,31 +1344,7 @@ const CardsPage = () => {
                   </CardActions>
                 )}
 
-                {/* Card Content */}
-                <StyledCardContent>
-                  <Typography className="card-title">
-                    {card.title}
-                  </Typography>
-                  <Typography className="card-description">
-                    {formatDescription(card.description)
-                      .filter(block => block.type === 'paragraph')
-                      .map(block => block.value)
-                      .join(' ')}
-                  </Typography>
-                  <div className="card-footer">
-                    <Chip
-                      label={card.type}
-                      size="small"
-                      sx={{
-                        background: getCardTypeColor(card.type),
-                        color: 'white',
-                      }}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(card.createdAt).toLocaleDateString()}
-                    </Typography>
-                  </div>
-                </StyledCardContent>
+                {/* Removed bottom content area (type chip and date) per new design */}
               </StyledCard>
 
 

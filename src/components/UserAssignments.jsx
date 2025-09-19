@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Typography, Paper, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, RadioGroup, FormControlLabel, Radio, LinearProgress, Chip } from '@mui/material';
+import { Box, Typography, Paper, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, RadioGroup, FormControlLabel, Radio, LinearProgress, Chip, TextField } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import axios from 'axios';
 import BaseUrl from '../Api';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const UserAssignments = () => {
   const token = localStorage.getItem('token');
@@ -12,8 +14,20 @@ const UserAssignments = () => {
   const [loading, setLoading] = useState(false);
   const [openAttempt, setOpenAttempt] = useState(false);
   const [active, setActive] = useState(null);
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState({}); // questionId -> answer(string)
   const [submitting, setSubmitting] = useState(false);
+  const [attemptResult, setAttemptResult] = useState(null); // {message, score, passed, attemptNumber}
+  const [openReport, setOpenReport] = useState(false);
+  const [reportAssignment, setReportAssignment] = useState(null);
+  const navigate = useNavigate();
+  const [attemptStatus, setAttemptStatus] = useState(() => {
+    try {
+      const raw = localStorage.getItem('assignmentAttemptStatus');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
 
   const axiosAuth = useMemo(() => ({
     headers: {
@@ -22,11 +36,88 @@ const UserAssignments = () => {
     },
   }), [token]);
 
+  const getUserFromToken = () => {
+    try {
+      if (!token) return {};
+      const parts = token.split('.');
+      if (parts.length < 2) return {};
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      // Common fields: id, _id, sub, email
+      return {
+        id: payload.id || payload._id || payload.sub,
+        email: payload.email || payload.user?.email,
+      };
+    } catch {
+      return {};
+    }
+  };
+
   const fetchAssignments = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BaseUrl}/assignments/available`, axiosAuth);
-      setAssignments(res.data || []);
+      if (!token) {
+        toast.error('You are not authenticated. Please login again.');
+        setAssignments([]);
+        return;
+      }
+      // Fetch individual user's report
+      const res = await axios.get(`${BaseUrl}/assignments/my-report`, axiosAuth);
+      const payload = res.data || {};
+      const report = Array.isArray(payload.report) ? payload.report : [];
+
+      // Normalize assignments to a consistent shape used by UI
+      const normalized = report.map((row) => ({
+        id: row.assignmentId,
+        title: row.title,
+        description: row.description,
+        cutoff: row.cutoff,
+        isActive: row.isActive,
+        attempts: Array.isArray(row.attempts) ? row.attempts : [],
+        // prefer backend-provided count if available; fallback will be fetched below
+        questionsCount: typeof row.questionsCount === 'number'
+          ? row.questionsCount
+          : (Array.isArray(row.questions) ? row.questions.length : undefined),
+      }));
+      // Fetch missing question counts in parallel where not provided
+      const withCounts = await Promise.all(normalized.map(async (a) => {
+        if (typeof a.questionsCount === 'number') return a;
+        try {
+          const details = await axios.get(`${BaseUrl}/assignments/${a.id}`, axiosAuth);
+          const count = Array.isArray(details.data?.questions)
+            ? details.data.questions.length
+            : (typeof details.data?.questionCount === 'number' ? details.data.questionCount : 0);
+          return { ...a, questionsCount: count };
+        } catch {
+          return { ...a, questionsCount: 0 };
+        }
+      }));
+      setAssignments(withCounts);
+
+      // Build attemptStatus from final attempt per assignment
+      const nextStatus = { ...attemptStatus };
+      for (const a of (withCounts || normalized)) {
+        const latest = (a.attempts || []).slice().sort((x, y) => {
+          const ax = typeof x.attemptNumber === 'number' ? x.attemptNumber : 0;
+          const ay = typeof y.attemptNumber === 'number' ? y.attemptNumber : 0;
+          if (ay !== ax) return ay - ax;
+          const dx = x.submittedAt ? new Date(x.submittedAt).getTime() : 0;
+          const dy = y.submittedAt ? new Date(y.submittedAt).getTime() : 0;
+          return dy - dx;
+        })[0];
+        if (latest) {
+          nextStatus[a.id] = {
+            passed: !!latest.passed,
+            attemptNumber: latest.attemptNumber,
+            score: latest.score,
+            cutoff: a.cutoff ?? 0,
+          };
+        } else {
+          // No attempts yet — clear any stale cache
+          if (nextStatus[a.id]) delete nextStatus[a.id];
+        }
+      }
+      setAttemptStatus(nextStatus);
+      try { localStorage.setItem('assignmentAttemptStatus', JSON.stringify(nextStatus)); } catch {}
     } catch (e) {
       console.error(e);
       toast.error(e.response?.data?.message || 'Failed to load assignments');
@@ -39,20 +130,41 @@ const UserAssignments = () => {
     fetchAssignments();
   }, []);
 
-  const startAttempt = (assignment) => {
-    setActive(assignment);
-    setAnswers({});
-    setOpenAttempt(true);
+  const startAttempt = async (assignment) => {
+    const id = assignment._id || assignment.id || assignment.assignmentId;
+    navigate(`/assignments/${id}/exam`);
+  };
+
+  const openAssignmentReport = (assignment) => {
+    setReportAssignment(assignment);
+    setOpenReport(true);
   };
 
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
-      const payload = { answers };
       const id = active._id || active.id;
-      const res = await axios.post(`${BaseUrl}/assignments/${id}/attempt`, payload, axiosAuth);
-      toast.success('Submission successful');
-      setOpenAttempt(false);
+      const payload = {
+        answers: (active?.questions || []).map((q) => ({
+          questionId: q._id || q.id,
+          answer: answers[q._id || q.id] ?? ''
+        }))
+      };
+      let res;
+      try {
+        // Use provided fixed endpoint first
+        res = await axios.post(`${BaseUrl}/assignments/68c7fef2744cc5f3510b59be/attempt`, payload, axiosAuth);
+      } catch (err) {
+        // Fallback to selected assignment id
+        res = await axios.post(`${BaseUrl}/assignments/${id}/attempt`, payload, axiosAuth);
+      }
+      const data = res.data || {};
+      setAttemptResult(data);
+      const nextStatus = { ...attemptStatus, [id]: { passed: !!data.passed, attemptNumber: data.attemptNumber, score: data.score, cutoff: active?.cutoff ?? 0 } };
+      setAttemptStatus(nextStatus);
+      localStorage.setItem('assignmentAttemptStatus', JSON.stringify(nextStatus));
+      toast.dismiss();
+      toast[data.passed ? 'success' : 'error'](`${data.message || (data.passed ? 'Assignment passed' : 'Assignment failed')} • Score: ${data.score}`);
       fetchAssignments();
     } catch (e) {
       console.error(e);
@@ -70,6 +182,7 @@ const UserAssignments = () => {
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Box
         sx={{
           maxWidth: '1800px',
@@ -109,37 +222,102 @@ const UserAssignments = () => {
         </Box>
       </Box>
       {assignments?.length ? (
-        <Grid container spacing={2}>
-          {(assignments || []).map((a) => (
-            <Grid item xs={12} md={6} key={a._id || a.id}>
+        <Box sx={{
+          boxSizing: 'border-box',
+          px: { xs: 1, sm: 2 },
+          mx: 'auto',
+          width: '100%',
+          maxWidth: { xs: '100%', md: '1200px' },
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+          alignItems: 'stretch',
+          gap: { xs: 1.5, sm: 2 }
+        }}>
+          {(assignments || []).map((a) => {
+            const id = a._id || a.id;
+            const status = attemptStatus[id];
+            const cutoff = a.cutoff ?? status?.cutoff ?? 0;
+            const isPassedCard = status?.passed || (typeof a.score === 'number' && a.score >= cutoff);
+            return (
+            <Box key={id}>
               <motion.div whileHover={{ y: -3 }} transition={{ type: 'spring', stiffness: 220, damping: 18 }}>
-                <Paper sx={{ p: 2.5, borderRadius: 3, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 10px 30px rgba(0,0,0,0.06)' }}>
-                <Typography variant="h6" fontWeight={600}>{a.title}</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>{a.description}</Typography>
-                <Box sx={{ display: 'flex', gap: 1, mt: 1.5, flexWrap: 'wrap' }}>
-                  <Chip size="small" label={`Questions: ${a.questions?.length || 0}`} />
-                  <Chip size="small" label={`Total: ${a.totalMarks ?? 0}`} />
-                  {a.dueDate && <Chip size="small" color={new Date(a.dueDate) < new Date() ? 'error' : 'default'} label={`Due: ${new Date(a.dueDate).toLocaleString()}`} />}
-                  {a.score != null && <Chip size="small" color="success" label={`Score: ${a.score}/${a.totalMarks ?? 0}`} />}
-                </Box>
-                <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                  <Button
-                    variant="contained"
-                    onClick={() => startAttempt(a)}
-                    disabled={a.submitted || (a.dueDate && new Date(a.dueDate) < new Date())}
-                    sx={{ borderRadius: '12px', textTransform: 'none' }}
-                  >
-                    {a.submitted ? 'Submitted' : 'Attempt'}
-                  </Button>
-                  {a.resultUrl && (
-                    <Button variant="outlined" sx={{ borderRadius: '12px', textTransform: 'none' }} onClick={() => window.open(a.resultUrl, '_blank')}>View Result</Button>
-                  )}
-                </Box>
+                <Paper
+                  onClick={() => { if (!isPassedCard) startAttempt(a); }}
+                  sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, cursor: isPassedCard ? 'default' : 'pointer', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 10px 30px rgba(0,0,0,0.06)', minHeight: { xs: 140, sm: 150 }, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
+                    <Box sx={{ minWidth: 0, flex: '1 1 60%' }}>
+                      <Typography variant="h6" fontWeight={600} sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</Typography>
+                      <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{a.description}</Typography>
+                      <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                        <Chip size="small" label={`Questions: ${typeof a.questionsCount === 'number' ? a.questionsCount : (a.questions?.length || 0)}`} />
+                        <Chip size="small" label={`Cutoff: ${a.cutoff ?? 0}`} />
+                        {typeof a.isActive === 'boolean' && (
+                          <Chip size="small" label={a.isActive ? 'Active' : 'Inactive'} />
+                        )}
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, alignItems: 'center' }}>
+                      {(() => {
+                        const id = a._id || a.id;
+                        const status = attemptStatus[id];
+                        const cutoff = a.cutoff ?? status?.cutoff ?? 0;
+                        const isPassed = status?.passed || (typeof a.score === 'number' && a.score >= cutoff);
+                        if (isPassed) {
+                          const score = (status?.score ?? a.score);
+                          return (
+                            <>
+                              {typeof score === 'number' && (
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>Score: {score}</Typography>
+                              )}
+                              <Chip
+                                color="success"
+                                label="Passed"
+                                sx={{ fontWeight: 600 }}
+                              />
+                            </>
+                          );
+                        }
+                        if (status && status.passed === false) {
+                          return (
+                            <Button
+                              variant="contained"
+                              color="error"
+                              size="small"
+                              sx={{ borderRadius: '10px', textTransform: 'none' }}
+                              onClick={(e) => { e.stopPropagation(); startAttempt(a); }}
+                            >
+                              Reattempt
+                            </Button>
+                          );
+                        }
+                        return (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            sx={{ borderRadius: '10px', textTransform: 'none' }}
+                            onClick={(e) => { e.stopPropagation(); startAttempt(a); }}
+                          >
+                            Attempt
+                          </Button>
+                        );
+                      })()}
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{ borderRadius: '10px', textTransform: 'none' }}
+                      onClick={(e) => { e.stopPropagation(); openAssignmentReport(a); }}
+                    >
+                      Report
+                    </Button>
+                  </Box>
                 </Paper>
               </motion.div>
-            </Grid>
-          ))}
-        </Grid>
+            </Box>
+          );})}
+        </Box>
       ) : (
         !loading && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -186,58 +364,58 @@ const UserAssignments = () => {
         )
       )}
 
+      {/* Exam modal removed; navigation now opens a dedicated page */}
       <Dialog
-        open={openAttempt}
-        onClose={() => setOpenAttempt(false)}
-        maxWidth="md"
+        open={openReport}
+        onClose={() => setOpenReport(false)}
+        maxWidth="sm"
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: '24px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
+            borderRadius: '20px',
+            background: 'rgba(255,255,255,0.98)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
           }
         }}
       >
-        <DialogTitle>{active?.title}</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>{reportAssignment?.title || 'Assignment Report'}</DialogTitle>
         <DialogContent dividers>
-          {active?.questions?.map((q, i) => (
-            <Box key={i} sx={{ mb: 2 }}>
-              <Typography fontWeight={600}>{i + 1}. {q.prompt}</Typography>
-              <RadioGroup
-                value={answers[i] ?? ''}
-                onChange={(e) => setAnswers({ ...answers, [i]: Number(e.target.value) })}
-              >
-                {(q.options || []).map((opt, oi) => (
-                  <FormControlLabel key={oi} value={oi} control={<Radio />} label={opt} />
+          {(() => {
+            const attempts = reportAssignment?.attempts || [];
+            if (!attempts.length) {
+              return (
+                <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                  No attempts yet.
+                </Typography>
+              );
+            }
+            const sorted = attempts.slice().sort((a, b) => {
+              const na = typeof a.attemptNumber === 'number' ? a.attemptNumber : 0;
+              const nb = typeof b.attemptNumber === 'number' ? b.attemptNumber : 0;
+              return nb - na;
+            });
+            return (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {sorted.map((att, idx) => (
+                  <Paper key={idx} sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                      <Typography sx={{ fontWeight: 600 }}>Attempt #{att.attemptNumber}</Typography>
+                      <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                        {att.submittedAt ? new Date(att.submittedAt).toLocaleString() : '—'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip label={`Score: ${att.score ?? '—'}`} />
+                      <Chip color={att.passed ? 'success' : 'error'} label={att.passed ? 'Passed' : 'Failed'} />
+                    </Box>
+                  </Paper>
                 ))}
-              </RadioGroup>
-            </Box>
-          ))}
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>Progress: {calcProgress()}%</Typography>
-            <LinearProgress variant="determinate" value={calcProgress()} />
-          </Box>
+              </Box>
+            );
+          })()}
         </DialogContent>
         <DialogActions>
-          <Button sx={{ borderRadius: '12px', textTransform: 'none', px: 2.5 }} onClick={() => setOpenAttempt(false)}>Cancel</Button>
-          <LoadingButton
-            loading={submitting}
-            variant="contained"
-            onClick={handleSubmit}
-            sx={{
-              borderRadius: '12px',
-              textTransform: 'none',
-              px: 3,
-              background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
-              '&:hover': { background: 'linear-gradient(135deg, #4338ca 0%, #2563eb 100%)' }
-            }}
-          >
-            Submit
-          </LoadingButton>
+          <Button sx={{ borderRadius: '10px', textTransform: 'none' }} onClick={() => setOpenReport(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>

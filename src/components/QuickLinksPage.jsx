@@ -8,6 +8,10 @@ import {
   CardContent,
   Button,
   TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -146,6 +150,7 @@ const QuickLinksPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(12);
   const [initialLoading, setInitialLoading] = useState(true);
   const displayedLinks = links.filter(link =>
     link.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -153,11 +158,22 @@ const QuickLinksPage = () => {
 
   const token = localStorage.getItem('token');
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  
+  // Check if user is admin - with more comprehensive role checking
+  const isAdmin = userData.role === 'admin' || 
+                  userData.role === 'Admin' || 
+                  userData.role === 'ADMIN' ||
+                  userData.isAdmin === true;
+  
+  // Debug logging (remove in production)
+  console.log('User Data:', userData);
+  console.log('User Role:', userData.role);
+  console.log('Is Admin:', isAdmin);
 
   // Fetch quick links
   const fetchQuickLinks = async () => {
     try {
-      const response = await axios.get(`${BaseUrl}/quick-links/my`, {
+      const response = await axios.get(`${BaseUrl}/quick-links/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -180,7 +196,30 @@ const QuickLinksPage = () => {
         setInitialLoading(false);
       }, 500);
     }
-  });
+  }, []); // Added empty dependency array to prevent infinite re-renders
+
+  // Recalculate pagination when filters or page size change
+  useEffect(() => {
+    const newPageCount = Math.max(1, Math.ceil(displayedLinks.length / rowsPerPage || 1));
+    setPageCount(newPageCount);
+    if (page > newPageCount) {
+      setPage(newPageCount);
+    }
+  }, [displayedLinks.length, rowsPerPage]);
+
+  // Reset to first page on search term change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
+  const handleChangeRowsPerPage = (value) => {
+    setRowsPerPage(value);
+    setPage(1);
+  };
+
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedLinks = displayedLinks.slice(startIndex, endIndex);
 
   const handleOpenDialog = (link = null) => {
     if (link) {
@@ -352,38 +391,43 @@ const QuickLinksPage = () => {
         />
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-
             Quick Links
+            {isAdmin && (
+              <Typography variant="caption" sx={{ ml: 2, color: 'rgba(255,255,255,0.7)' }}>
+              </Typography>
+            )}
           </Typography>
           <Typography variant="body1" sx={{ opacity: 0.9, mb: 2, maxWidth: '800px' }}>
             Access your frequently used resources in one place
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
-          sx={{
-            borderRadius: '12px',
-            // background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-            background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
+        {isAdmin && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenDialog()}
+            sx={{
+              borderRadius: '12px',
+              // background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
 
-            padding: '12px 24px',
-            textTransform: 'none',
-            fontSize: '1rem',
-            fontWeight: 600,
-            boxShadow: '0 4px 15px rgba(37, 99, 235, 0.2)',
-            '&:hover': {
-              // background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-              background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
+              padding: '12px 24px',
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 600,
+              boxShadow: '0 4px 15px rgba(37, 99, 235, 0.2)',
+              '&:hover': {
+                // background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
 
-              transform: 'translateY(-2px)',
-              boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3)',
-            }
-          }}
-        >
-          Add Quick Link
-        </Button>
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3)',
+              }
+            }}
+          >
+            Add Quick Link
+          </Button>
+        )}
       </Box>
 
       <Box
@@ -419,7 +463,7 @@ const QuickLinksPage = () => {
 
           {/* Grid Container */}
           <Grid container spacing={3} sx={{ justifyContent: 'flex-start' }} className="mb-4">
-            {displayedLinks.map((link) => (
+            {paginatedLinks.map((link) => (
               <Grid item key={link._id} sx={{ width: '280px' }}>
                 <StyledCard onClick={() => handleCardClick(link.link)}>
                   <CardShine className="card-shine" />
@@ -488,88 +532,121 @@ const QuickLinksPage = () => {
                       </Typography>
                     </Box>
                   </CardContent>
-                  <CardOverlay
-                    className="card-overlay"
-                    onClick={(e) => e.stopPropagation()} // Prevent card click when clicking overlay
-                  >
-                    <Tooltip title="Edit" TransitionComponent={Zoom}>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenDialog(link);
-                        }}
-                        sx={{
-                          backgroundColor: 'white',
-                          '&:hover': {
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                          }
-                        }}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete" TransitionComponent={Zoom}>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(link._id);
-                        }}
-                        sx={{
-                          backgroundColor: 'white',
-                          '&:hover': {
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            color: '#ef4444',
-                          }
-                        }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </CardOverlay>
+                  {isAdmin && (
+                    <CardOverlay
+                      className="card-overlay"
+                      onClick={(e) => e.stopPropagation()} // Prevent card click when clicking overlay
+                    >
+                      <Tooltip title="Edit" TransitionComponent={Zoom}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDialog(link);
+                          }}
+                          sx={{
+                            backgroundColor: 'white',
+                            '&:hover': {
+                              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            }
+                          }}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete" TransitionComponent={Zoom}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(link._id);
+                          }}
+                          sx={{
+                            backgroundColor: 'white',
+                            '&:hover': {
+                              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                              color: '#ef4444',
+                            }
+                          }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </CardOverlay>
+                  )}
                 </StyledCard>
               </Grid>
             ))}
           </Grid>
 
-          {/* Pagination - Moved to bottom */}
+          {/* Pagination & Controls */}
           <Box sx={{
             display: 'flex',
-            justifyContent: 'center',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
             mt: 'auto',
             pt: 4,
             borderTop: '1px solid rgba(0,0,0,0.08)'
           }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 140 }}>
+                <InputLabel id="rows-per-page-label">Links per page</InputLabel>
+                <Select
+                  labelId="rows-per-page-label"
+                  id="rows-per-page"
+                  value={rowsPerPage}
+                  label="Links per page"
+                  onChange={(e) => handleChangeRowsPerPage(e.target.value)}
+                >
+                  <MenuItem value={6}>6</MenuItem>
+                  <MenuItem value={12}>12</MenuItem>
+                  <MenuItem value={24}>24</MenuItem>
+                  <MenuItem value={48}>48</MenuItem>
+                </Select>
+              </FormControl>
+              <Typography variant="body2" color="text.secondary">
+                Showing {displayedLinks.length === 0 ? 0 : startIndex + 1}–{Math.min(endIndex, displayedLinks.length)} of {displayedLinks.length}
+              </Typography>
+            </Box>
             <Pagination
               count={pageCount}
               page={page}
               onChange={(e, value) => setPage(value)}
               color="primary"
-              size="large"
+              size="medium"
+              showFirstButton
+              showLastButton
+              siblingCount={1}
+              boundaryCount={1}
+              variant="outlined"
+              shape="rounded"
               sx={{
                 '& .MuiPaginationItem-root': {
-                  borderRadius: '8px',
+                  borderRadius: '10px',
+                  borderColor: 'rgba(99, 102, 241, 0.3)'
                 }
               }}
             />
           </Box>
         </Box>
 
-        {/* Enhanced Dialog */}
-        <StyledDialog
-          open={openDialog}
-          onClose={handleCloseDialog}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: '24px',
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-            }
-          }}
-        >
+        {/* Enhanced Dialog - Only show for admin users */}
+        {isAdmin && (
+          <StyledDialog
+            open={openDialog}
+            onClose={handleCloseDialog}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: '24px',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+              }
+            }}
+          >
           <DialogTitle sx={{
             pb: 1,
             display: 'flex',
@@ -689,6 +766,7 @@ const QuickLinksPage = () => {
             </Button>
           </DialogActions>
         </StyledDialog>
+        )}
       </Box>
     </Box>
   );

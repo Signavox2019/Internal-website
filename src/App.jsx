@@ -22,6 +22,7 @@ import EmergencyContactPage from './components/EmergencyContact';
 import CommunityConnect from './components/CommunityConnect';
 import AdminAssignments from './components/AdminAssignments';
 import UserAssignments from './components/UserAssignments';
+import ExamPage from './components/ExamPage';
 
 const theme = createTheme({
   palette: {
@@ -121,12 +122,7 @@ function App() {
             } />
             <Route path="/assignments" element={
               <ProtectedRoute>
-                <UserAssignments />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/assignments" element={
-              <ProtectedRoute adminOnly={true}>
-                <AdminAssignments />
+                {isAdmin ? <AdminAssignments /> : <UserAssignments />}
               </ProtectedRoute>
             } />
             <Route path="/emergency" element={
@@ -146,6 +142,13 @@ function App() {
             } />
           </Route>
 
+          {/* Exam route without Layout (no navbar/footer) */}
+          <Route path="/assignments/:id/exam" element={
+            <ProtectedRoute>
+              <ExamPage />
+            </ProtectedRoute>
+          } />
+          
           {/* Redirect root to login or welcome based on auth status */}
           <Route path="/" element={
             localStorage.getItem('token')

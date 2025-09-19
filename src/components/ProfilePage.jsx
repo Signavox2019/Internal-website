@@ -134,9 +134,9 @@ const ProfilePage = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            // console.log(response.data);
-            setProfile(response.data.employee);
-            setEditedProfile(response.data.employee);
+            const employee = response?.data?.data || response?.data?.employee || response?.data;
+            setProfile(employee);
+            setEditedProfile(employee);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -171,7 +171,8 @@ const ProfilePage = () => {
                     }
                 }
             );
-            setProfile(response.data);
+            const employee = response?.data?.data || response?.data?.employee || response?.data;
+            setProfile(employee);
             setIsEditing(false);
             toast.success('Profile updated successfully!');
         } catch (error) {

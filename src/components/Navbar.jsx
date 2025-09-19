@@ -79,11 +79,11 @@ import BaseUrl from '../Api';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '@mui/lab';
 import styled from '@emotion/styled';
-import CompanyName from '../assets/signavox1.png';
+import CompanyName from '../assets/Signavox_black.png';
 
 const MegaMenuPopper = styled(Popper)(({ theme }) => ({
   zIndex: 1100,
-  width: '1000px',
+  width: 'min(1000px, calc(100vw - 32px))',
   marginTop: '10px',
 }));
 
@@ -203,6 +203,8 @@ const Navbar = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSm = useMediaQuery(theme.breakpoints.down('sm'));
+  const logoWidth = isSm ? 140 : (isMobile ? 180 : 220);
   const navigate = useNavigate();
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const isAdmin = localStorage.getItem('isAdmin') === 'true';
@@ -334,6 +336,11 @@ const Navbar = () => {
   );
 
   const location = useLocation();
+  const otherPaths = Object.values(menuCategories)
+    .flatMap((category) => category.items)
+    .filter((item) => !item.isExternal && item.path)
+    .map((item) => item.path);
+  const isOthersActive = otherPaths.some((p) => location.pathname.startsWith(p));
 
   const handleTicketClick = () => {
     navigate('/tickets');
@@ -366,7 +373,7 @@ const Navbar = () => {
           boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
+        <Toolbar sx={{ justifyContent: 'space-between', minHeight: 64, py: 0 }}>
           {isMobile && (
             <IconButton
               color="primary"
@@ -381,7 +388,7 @@ const Navbar = () => {
             <motion.img
               src={CompanyName}
               alt="Signavox Logo"
-              style={{ height: 40, marginRight: 16 }}
+              style={{ width: logoWidth, height: 'auto', objectFit: 'contain', display: 'block' }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             />
@@ -398,7 +405,7 @@ const Navbar = () => {
           </Box>
 
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex',  alignItems: 'center', flexWrap: 'wrap' }}>
               {filteredNavItems.map((item) => (
                 <motion.div
                   key={item.path}
@@ -482,9 +489,18 @@ const Navbar = () => {
                       width: '100%',
                       height: '3px',
                       background: 'linear-gradient(135deg, #8C52FF, #311188)',
-                      transform: Boolean(megaMenuAnchor) ? 'scaleX(1)' : 'scaleX(0)',
+                      transform: (Boolean(megaMenuAnchor) || isOthersActive) ? 'scaleX(1)' : 'scaleX(0)',
                       transformOrigin: 'left',
                       transition: 'transform 0.3s ease'
+                    },
+                    '& .MuiButton-startIcon': {
+                      color: (Boolean(megaMenuAnchor) || isOthersActive) ? '#311188' : '#0A081E',
+                      transform: (Boolean(megaMenuAnchor) || isOthersActive) ? 'scale(1.1)' : 'scale(1)',
+                      transition: 'all 0.3s ease',
+                    },
+                    '& .MuiButton-label': {
+                      color: (Boolean(megaMenuAnchor) || isOthersActive) ? '#4f46e5' : 'inherit',
+                      fontWeight: (Boolean(megaMenuAnchor) || isOthersActive) ? 700 : 600,
                     },
                     '&:hover': {
                       '&::after': {
