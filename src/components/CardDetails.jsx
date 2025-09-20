@@ -124,37 +124,36 @@ const CardDetails = () => {
         />
       </Box>
 
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, py: { xs: 4, md: 6 } }}>
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, py: { xs: 2, md: 2 } }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Enhanced Back Button */}
-          <IconButton
-            onClick={handleBack}
-            sx={{
-              position: 'fixed',
-              // top: { xs: 16, md: 24, lg: 32 },
-              top: 70,
-              left: { xs: 16, md: 24 },
-              bgcolor: 'white',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-              width: { xs: 45, md: 54 },
-              height: { xs: 45, md: 54 },
-              '&:hover': {
+          {/* Back Button */}
+          <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              onClick={handleBack}
+              sx={{
                 bgcolor: 'white',
-                transform: 'scale(1.1) rotate(-10deg)',
-              },
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              zIndex: 10,
-            }}
-          >
-            <ArrowBack />
-          </IconButton>
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                width: { xs: 48, md: 56 },
+                height: { xs: 48, md: 56 },
+                border: '1px solid rgba(0,0,0,0.05)',
+                '&:hover': {
+                  bgcolor: 'white',
+                  transform: 'translateX(-4px)',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.12)',
+                },
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+            >
+              <ArrowBack sx={{ color: '#6366f1' }} />
+            </IconButton>
+          </Box>
 
           {/* Main Content */}
-          <Box sx={{ maxWidth: '1400px', margin: '0 auto', mt: { xs: 6, md: 8 } }}>
+          <Box sx={{ maxWidth: '1400px', margin: '0 auto' }}>
             {/* Header Section */}
             <Grid container spacing={4} alignItems="center" sx={{ mb: { xs: 4, md: 6 } }}>
               {card.image && (

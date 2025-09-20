@@ -302,6 +302,40 @@ const ExamPage = () => {
               ? result.totalMarks
               : (Array.isArray(exam?.questions) ? exam.questions.reduce((s,q)=> s + (Number(q?.marks)||0), 0) : 0)}
           />
+          
+          {/* Pass/Fail Status */}
+          {(() => {
+            const score = result?.score ?? 0;
+            const cutoff = exam?.cutoff ?? 0;
+            const isPassed = score >= cutoff;
+            
+            return (
+              <Box sx={{ mt: 3, mb: 2 }}>
+                <Typography 
+                  variant="h5" 
+                  fontWeight={800}
+                  sx={{ 
+                    color: isPassed ? 'success.main' : 'error.main',
+                    mb: 1
+                  }}
+                >
+                  {isPassed ? '🎉 Congratulations! You Passed!' : '❌ You Failed'}
+                </Typography>
+                <Typography variant="body1" sx={{ opacity: 0.8, mb: 1 }}>
+                  Score: {score} / {typeof result?.totalMarks === 'number' ? result.totalMarks : (Array.isArray(exam?.questions) ? exam.questions.reduce((s,q)=> s + (Number(q?.marks)||0), 0) : 0)}
+                </Typography>
+                {/* <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                  Required to pass: {cutoff} marks
+                </Typography> */}
+                {!isPassed && (
+                  <Typography variant="body2" sx={{ opacity: 0.7, mt: 1, fontStyle: 'italic' }}>
+                    Don't worry! You can retake this exam to improve your score.
+                  </Typography>
+                )}
+              </Box>
+            );
+          })()}
+          
           <Box sx={{ mt: 3, display: 'flex', gap: 1.5, justifyContent: 'center' }}>
             <Button variant="contained" onClick={() => navigate('/assignments')} sx={{ borderRadius: '10px', textTransform: 'none' }}>Back to Assignments</Button>
           </Box>

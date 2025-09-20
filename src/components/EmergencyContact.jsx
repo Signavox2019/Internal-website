@@ -229,7 +229,7 @@ const CarouselDots = styled(Box)(({ theme }) => ({
   bottom: 40,
   left: '50%',
   transform: 'translateX(-50%)',
-  zIndex: 2,
+  zIndex: 10,
   display: 'flex',
   gap: theme.spacing(1.5),
   padding: theme.spacing(1.5),
@@ -351,158 +351,161 @@ const EmergencyContact = () => {
 
   return (
     <PageContainer>
-      <SwipeableViews
-        axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-        index={activeStep}
-        onChangeIndex={handleStepChange}
-        enableMouseEvents
-        style={{ width: '100%', height: '85vh' }}
-      >
-        {emergencyTypes.map((emergency, index) => (
-          <div key={index}>
-            {Math.abs(activeStep - index) <= 2 ? (
-              <SlideContainer bgimage={emergency.bgImage}>
-                <ContentWrapper>
-                  <EmergencyDetails>
+      <Box sx={{ position: 'relative', height: '85vh' }}>
+        <SwipeableViews
+          axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+          index={activeStep}
+          onChangeIndex={handleStepChange}
+          enableMouseEvents
+          style={{ width: '100%', height: '100%' }}
+        >
+          {emergencyTypes.map((emergency, index) => (
+            <div key={index}>
+              {Math.abs(activeStep - index) <= 2 ? (
+                <SlideContainer bgimage={emergency.bgImage}>
+                  <ContentWrapper>
+                    <EmergencyDetails>
+                      <motion.div
+                        initial={{ opacity: 0, x: -50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <Typography
+                          variant="h2"
+                          sx={{
+                            fontWeight: 700,
+                            mb: 2,
+                            background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                          }}
+                        >
+                          {emergency.title}
+                        </Typography>
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            mb: 3,
+                            color: 'rgba(255,255,255,0.9)',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {emergency.subtitle}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            mb: 4,
+                            color: 'rgba(255,255,255,0.7)',
+                            fontSize: '1.1rem',
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          {emergency.description}
+                        </Typography>
+
+                        <Stack direction="row" spacing={2}>
+                          <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<Phone />}
+                            sx={{
+                              background: emergency.color,
+                              px: 4,
+                              py: 2,
+                              borderRadius: 2,
+                              '&:hover': {
+                                background: emergency.color,
+                                opacity: 0.9,
+                              },
+                            }}
+                          >
+                            Emergency Call
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="large"
+                            startIcon={<WhatsApp />}
+                            sx={{
+                              borderColor: 'white',
+                              color: 'white',
+                              px: 4,
+                              py: 2,
+                              borderRadius: 2,
+                              '&:hover': {
+                                borderColor: 'white',
+                                background: 'rgba(255,255,255,0.1)',
+                              },
+                            }}
+                          >
+                            Quick Message
+                          </Button>
+                        </Stack>
+                      </motion.div>
+                    </EmergencyDetails>
+
                     <motion.div
-                      initial={{ opacity: 0, x: -50 }}
+                      initial={{ opacity: 0, x: 50 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.6 }}
                     >
-                      <Typography
-                        variant="h2"
-                        sx={{
-                          fontWeight: 700,
-                          mb: 2,
-                          background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        {emergency.title}
-                      </Typography>
-                      <Typography
-                        variant="h4"
-                        sx={{
-                          mb: 3,
-                          color: 'rgba(255,255,255,0.9)',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {emergency.subtitle}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          mb: 4,
-                          color: 'rgba(255,255,255,0.7)',
-                          fontSize: '1.1rem',
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {emergency.description}
-                      </Typography>
-
-                      <Stack direction="row" spacing={2}>
-                        <Button
-                          variant="contained"
-                          size="large"
-                          startIcon={<Phone />}
-                          sx={{
-                            background: emergency.color,
-                            px: 4,
-                            py: 2,
-                            borderRadius: 2,
-                            '&:hover': {
-                              background: emergency.color,
-                              opacity: 0.9,
-                            },
-                          }}
-                        >
-                          Emergency Call
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="large"
-                          startIcon={<WhatsApp />}
-                          sx={{
-                            borderColor: 'white',
-                            color: 'white',
-                            px: 4,
-                            py: 2,
-                            borderRadius: 2,
-                            '&:hover': {
-                              borderColor: 'white',
-                              background: 'rgba(255,255,255,0.1)',
-                            },
-                          }}
-                        >
-                          Quick Message
-                        </Button>
-                      </Stack>
-                    </motion.div>
-                  </EmergencyDetails>
-
-                  <motion.div
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    <GlassCard color={emergency.color}>
-                      <Typography variant="h5" sx={{ color: 'white', mb: 3, fontWeight: 600 }}>
-                        Emergency Contacts
-                      </Typography>
-                      <Stack spacing={2}>
-                        {emergency.contacts.map((contact, idx) => (
-                          <Box
-                            key={idx}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 2,
-                              background: 'rgba(255,255,255,0.1)',
-                              p: 2,
-                              borderRadius: 2,
-                            }}
-                          >
-                            <Avatar
+                      <GlassCard color={emergency.color}>
+                        <Typography variant="h5" sx={{ color: 'white', mb: 3, fontWeight: 600 }}>
+                          Emergency Contacts
+                        </Typography>
+                        <Stack spacing={2}>
+                          {emergency.contacts.map((contact, idx) => (
+                            <Box
+                              key={idx}
                               sx={{
-                                bgcolor: `${emergency.color}22`,
-                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                background: 'rgba(255,255,255,0.1)',
+                                p: 2,
+                                borderRadius: 2,
                               }}
                             >
-                              {contact.icon}
-                            </Avatar>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                                {contact.name}
-                              </Typography>
-                              <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
-                                {contact.number}
-                              </Typography>
+                              <Avatar
+                                sx={{
+                                  bgcolor: `${emergency.color}22`,
+                                  color: 'white',
+                                }}
+                              >
+                                {contact.icon}
+                              </Avatar>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                                  {contact.name}
+                                </Typography>
+                                <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+                                  {contact.number}
+                                </Typography>
+                              </Box>
                             </Box>
-                          </Box>
-                        ))}
-                      </Stack>
-                    </GlassCard>
-                  </motion.div>
-                </ContentWrapper>
+                          ))}
+                        </Stack>
+                      </GlassCard>
+                    </motion.div>
+                  </ContentWrapper>
+                </SlideContainer>
+              ) : null}
+            </div>
+          ))}
+        </SwipeableViews>
 
-                <CarouselDots>
-                  {emergencyTypes.map((_, idx) => (
-                    <CarouselDot
-                      key={idx}
-                      active={idx === activeStep}
-                      color={emergencyTypes[activeStep].color}
-                      onClick={() => handleStepChange(idx)}
-                    />
-                  ))}
-                </CarouselDots>
-              </SlideContainer>
-            ) : null}
-          </div>
-        ))}
-      </SwipeableViews>
+        {/* Fixed Carousel Indicators - Positioned outside SwipeableViews but within carousel section */}
+        <CarouselDots>
+          {emergencyTypes.map((_, idx) => (
+            <CarouselDot
+              key={idx}
+              active={idx === activeStep}
+              color={emergencyTypes[activeStep].color}
+              onClick={() => handleStepChange(idx)}
+            />
+          ))}
+        </CarouselDots>
+      </Box>
 
       <StatsSection>
         <Container maxWidth="xl">
@@ -511,7 +514,7 @@ const EmergencyContact = () => {
               variant="h2"
               sx={{
                 fontWeight: 700,
-                color: emergencyTypes[activeStep].color,
+                color: '#311188',
                 mb: 2,
                 position: 'relative',
                 display: 'inline-block',
@@ -523,7 +526,7 @@ const EmergencyContact = () => {
                   transform: 'translateX(-50%)',
                   width: '60%',
                   height: '4px',
-                  background: `linear-gradient(90deg, transparent, ${emergencyTypes[activeStep].color}, transparent)`,
+                  background: 'linear-gradient(90deg, transparent, #311188, transparent)',
                 },
               }}
             >
@@ -557,11 +560,11 @@ const EmergencyContact = () => {
                   transition={{ delay: idx * 0.1 }}
                   style={{ height: '100%' }}
                 >
-                  <MetricCard color={emergencyTypes[activeStep].color}>
-                    <MetricIcon color={emergencyTypes[activeStep].color}>
+                  <MetricCard color="#311188">
+                    <MetricIcon color="#311188">
                       {stat.icon}
                     </MetricIcon>
-                    <MetricValue color={emergencyTypes[activeStep].color}>
+                    <MetricValue color="#311188">
                       {stat.value}
                     </MetricValue>
                     <Typography variant="h6" sx={{ mb: 2, color: 'text.primary', fontWeight: 600 }}>
@@ -570,8 +573,8 @@ const EmergencyContact = () => {
                     <Typography variant="body1" color="text.secondary" sx={{ position: 'relative', zIndex: 1 }}>
                       {stat.description}
                     </Typography>
-                    <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${emergencyTypes[activeStep].color}22` }}>
-                      <Typography variant="caption" sx={{ color: emergencyTypes[activeStep].color, fontWeight: 500 }}>
+                    <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(49, 17, 136, 0.2)' }}>
+                      <Typography variant="caption" sx={{ color: '#311188', fontWeight: 500 }}>
                         Available 24/7
                       </Typography>
                     </Box>

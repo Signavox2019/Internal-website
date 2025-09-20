@@ -105,11 +105,15 @@ const UserAssignments = () => {
           return dy - dx;
         })[0];
         if (latest) {
+          const cutoff = a.cutoff ?? 0;
+          const score = latest.score ?? 0;
+          const isPassed = score >= cutoff;
+          
           nextStatus[a.id] = {
-            passed: !!latest.passed,
+            passed: isPassed,
             attemptNumber: latest.attemptNumber,
             score: latest.score,
-            cutoff: a.cutoff ?? 0,
+            cutoff: cutoff,
           };
         } else {
           // No attempts yet — clear any stale cache
@@ -160,11 +164,14 @@ const UserAssignments = () => {
       }
       const data = res.data || {};
       setAttemptResult(data);
-      const nextStatus = { ...attemptStatus, [id]: { passed: !!data.passed, attemptNumber: data.attemptNumber, score: data.score, cutoff: active?.cutoff ?? 0 } };
+      const cutoff = active?.cutoff ?? 0;
+      const score = data.score ?? 0;
+      const isPassed = score >= cutoff;
+      const nextStatus = { ...attemptStatus, [id]: { passed: isPassed, attemptNumber: data.attemptNumber, score: data.score, cutoff: cutoff } };
       setAttemptStatus(nextStatus);
       localStorage.setItem('assignmentAttemptStatus', JSON.stringify(nextStatus));
       toast.dismiss();
-      toast[data.passed ? 'success' : 'error'](`${data.message || (data.passed ? 'Assignment passed' : 'Assignment failed')} • Score: ${data.score}`);
+      toast[isPassed ? 'success' : 'error'](`${data.message || (isPassed ? 'Assignment passed' : 'Assignment failed')} • Score: ${data.score}`);
       fetchAssignments();
     } catch (e) {
       console.error(e);

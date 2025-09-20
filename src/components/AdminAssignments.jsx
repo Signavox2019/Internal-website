@@ -649,8 +649,7 @@ const AdminAssignments = () => {
           <Tabs
             value={currentTab}
             onChange={(_, v) => { setCurrentTab(v); if (v === 1) fetchReport(); }}
-            variant="scrollable"
-            scrollButtons="auto"
+            variant="standard"
             sx={{
               minHeight: { xs: '40px', sm: '48px' },
               '& .MuiTab-root': {
@@ -894,8 +893,18 @@ const AdminAssignments = () => {
 
       ) : (
         <Box sx={{ boxSizing: 'border-box', px: { xs: 1, sm: 2 }, mx: 'auto', width: '100%', maxWidth: { xs: '100%', md: '1200px' } }}>
-          <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, background: 'linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.98))', backdropFilter: 'blur(14px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 10px 30px rgba(0,0,0,0.06)' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 2 }}>
+          <Paper sx={{ 
+            p: { xs: 2, sm: 3 }, 
+            borderRadius: 3, 
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.98))', 
+            backdropFilter: 'blur(14px)', 
+            border: '1px solid rgba(0,0,0,0.06)', 
+            boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+            height: '600px',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 2, flexShrink: 0 }}>
               <Typography variant="h6" fontWeight={800}>Employee Assignment Report</Typography>
               {selectedEmployeeId && (
                 <Chip color="primary" variant="outlined" label={(employees || []).find(e => (e._id || e.id) === selectedEmployeeId)?.name || ''} />
@@ -903,66 +912,140 @@ const AdminAssignments = () => {
             </Box>
 
             {!selectedEmployeeId && (
-              <Box sx={{ p: 3, textAlign: 'center', border: '1px dashed #e5e7eb', borderRadius: 2, background: 'rgba(99,102,241,0.04)' }}>
+              <Box sx={{ 
+                p: 3, 
+                textAlign: 'center', 
+                border: '1px dashed #e5e7eb', 
+                borderRadius: 2, 
+                background: 'rgba(99,102,241,0.04)',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
+              }}>
                 <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>Select an employee to view their report</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Use the dropdown above to choose an employee. You’ll see completed and remaining assignments here.</Typography>
+                <Typography variant="body2" sx={{ opacity: 0.7 }}>Use the dropdown above to choose an employee. You'll see completed and remaining assignments here.</Typography>
               </Box>
             )}
 
             {selectedEmployeeId && (
-              <Box>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 {statusLoading ? (
-                  <Typography>Loading employee report…</Typography>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography>Loading employee report…</Typography>
+                  </Box>
                 ) : !statusData ? (
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>No data available.</Typography>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography variant="body2" sx={{ opacity: 0.8 }}>No data available.</Typography>
+                  </Box>
                 ) : (
-                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-                    <Box>
-                      <Paper sx={{ p: 2, borderRadius: 2, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+                    gap: 2, 
+                    flex: 1,
+                    minHeight: 0
+                  }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                      <Paper sx={{ 
+                        p: 2, 
+                        borderRadius: 2, 
+                        background: 'rgba(34,197,94,0.06)', 
+                        border: '1px solid rgba(34,197,94,0.15)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%'
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, flexShrink: 0 }}>
                           <Typography variant="subtitle1" fontWeight={800}>Completed</Typography>
                           <Chip color="success" label={(statusData.completedAssignments || []).length} />
                         </Box>
-                        <List dense>
-                          {(statusData.completedAssignments || []).map((a) => (
-                            <Box key={a._id} sx={{ mb: 1.25, p: 1.25, borderRadius: 2, border: '1px solid #e5e7eb', background: 'white' }}>
-                              <Typography sx={{ fontWeight: 700 }}>{a.title}</Typography>
-                              <Typography variant="body2" sx={{ opacity: 0.8 }}>{a.description}</Typography>
-                              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 0.75 }}>
-                                <Chip size="small" label={`Cutoff: ${typeof a.cutoff === 'number' ? a.cutoff : '—'}`} />
-                                <Chip size="small" label={`Questions: ${a.questions?.length || 0}`} />
-                                {typeof a.totalMarks === 'number' && <Chip size="small" color="primary" label={`Total: ${a.totalMarks}`} />}
+                        <Box sx={{ 
+                          flex: 1, 
+                          overflowY: 'auto',
+                          '&::-webkit-scrollbar': {
+                            width: '6px',
+                          },
+                          '&::-webkit-scrollbar-track': {
+                            background: 'rgba(0,0,0,0.1)',
+                            borderRadius: '3px',
+                          },
+                          '&::-webkit-scrollbar-thumb': {
+                            background: 'rgba(34,197,94,0.3)',
+                            borderRadius: '3px',
+                          },
+                          '&::-webkit-scrollbar-thumb:hover': {
+                            background: 'rgba(34,197,94,0.5)',
+                          }
+                        }}>
+                          <List dense>
+                            {(statusData.completedAssignments || []).map((a) => (
+                              <Box key={a._id} sx={{ mb: 1.25, p: 1.25, borderRadius: 2, border: '1px solid #e5e7eb', background: 'white' }}>
+                                <Typography sx={{ fontWeight: 700 }}>{a.title}</Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.8 }}>{a.description}</Typography>
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 0.75 }}>
+                                  <Chip size="small" label={`Cutoff: ${typeof a.cutoff === 'number' ? a.cutoff : '—'}`} />
+                                  <Chip size="small" label={`Questions: ${a.questions?.length || 0}`} />
+                                  {typeof a.totalMarks === 'number' && <Chip size="small" color="primary" label={`Total: ${a.totalMarks}`} />}
+                                </Box>
                               </Box>
-                            </Box>
-                          ))}
-                          {!(statusData.completedAssignments || []).length && (
-                            <Typography variant="body2" sx={{ opacity: 0.7 }}>No completed assignments.</Typography>
-                          )}
-                        </List>
+                            ))}
+                            {!(statusData.completedAssignments || []).length && (
+                              <Typography variant="body2" sx={{ opacity: 0.7 }}>No completed assignments.</Typography>
+                            )}
+                          </List>
+                        </Box>
                       </Paper>
                     </Box>
-                    <Box>
-                      <Paper sx={{ p: 2, borderRadius: 2, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                      <Paper sx={{ 
+                        p: 2, 
+                        borderRadius: 2, 
+                        background: 'rgba(59,130,246,0.06)', 
+                        border: '1px solid rgba(59,130,246,0.15)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%'
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, flexShrink: 0 }}>
                           <Typography variant="subtitle1" fontWeight={800}>Remaining</Typography>
                           <Chip color="primary" label={(statusData.remainingAssignments || []).length} />
                         </Box>
-                        <List dense>
-                          {(statusData.remainingAssignments || []).map((a) => (
-                            <Box key={a._id} sx={{ mb: 1.25, p: 1.25, borderRadius: 2, border: '1px solid #e5e7eb', background: 'white' }}>
-                              <Typography sx={{ fontWeight: 700 }}>{a.title}</Typography>
-                              <Typography variant="body2" sx={{ opacity: 0.8 }}>{a.description}</Typography>
-                              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 0.75 }}>
-                                <Chip size="small" label={`Cutoff: ${typeof a.cutoff === 'number' ? a.cutoff : '—'}`} />
-                                <Chip size="small" label={`Questions: ${a.questions?.length || 0}`} />
-                                {typeof a.totalMarks === 'number' && <Chip size="small" color="primary" label={`Total: ${a.totalMarks}`} />}
+                        <Box sx={{ 
+                          flex: 1, 
+                          overflowY: 'auto',
+                          '&::-webkit-scrollbar': {
+                            width: '6px',
+                          },
+                          '&::-webkit-scrollbar-track': {
+                            background: 'rgba(0,0,0,0.1)',
+                            borderRadius: '3px',
+                          },
+                          '&::-webkit-scrollbar-thumb': {
+                            background: 'rgba(59,130,246,0.3)',
+                            borderRadius: '3px',
+                          },
+                          '&::-webkit-scrollbar-thumb:hover': {
+                            background: 'rgba(59,130,246,0.5)',
+                          }
+                        }}>
+                          <List dense>
+                            {(statusData.remainingAssignments || []).map((a) => (
+                              <Box key={a._id} sx={{ mb: 1.25, p: 1.25, borderRadius: 2, border: '1px solid #e5e7eb', background: 'white' }}>
+                                <Typography sx={{ fontWeight: 700 }}>{a.title}</Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.8 }}>{a.description}</Typography>
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 0.75 }}>
+                                  <Chip size="small" label={`Cutoff: ${typeof a.cutoff === 'number' ? a.cutoff : '—'}`} />
+                                  <Chip size="small" label={`Questions: ${a.questions?.length || 0}`} />
+                                  {typeof a.totalMarks === 'number' && <Chip size="small" color="primary" label={`Total: ${a.totalMarks}`} />}
+                                </Box>
                               </Box>
-                            </Box>
-                          ))}
-                          {!(statusData.remainingAssignments || []).length && (
-                            <Typography variant="body2" sx={{ opacity: 0.7 }}>No pending assignments.</Typography>
-                          )}
-                        </List>
+                            ))}
+                            {!(statusData.remainingAssignments || []).length && (
+                              <Typography variant="body2" sx={{ opacity: 0.7 }}>No pending assignments.</Typography>
+                            )}
+                          </List>
+                        </Box>
                       </Paper>
                     </Box>
                   </Box>

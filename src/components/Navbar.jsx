@@ -255,7 +255,7 @@ const Navbar = () => {
       icon: <BuildIcon />,
       items: [
         { title: 'Skill Path', icon: <SkillPathIcon />, path: '/skill-path' },
-        ...(isAdmin ? [{ title: 'Manage Assignments', icon: <WorkIcon />, path: '/admin/assignments' }] : []),
+        // ...(isAdmin ? [{ title: 'Manage Assignments', icon: <WorkIcon />, path: '/admin/assignments' }] : []),
         // { title: 'Office Pass', icon: <OfficePassIcon />, path: '/office-pass' },
         { 
           title: 'Time Card', 
@@ -624,18 +624,28 @@ const Navbar = () => {
           }
         }}
       >
-        <MenuItem onClick={() => navigate('/profile')}>
-          <ListItemIcon>
-            <Person fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary="Profile" />
-        </MenuItem>
-        <MenuItem onClick={handleLogout}>
-          <ListItemIcon>
-            <ExitToApp fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary="Logout" />
-        </MenuItem>
+        <ClickAwayListener onClickAway={handleProfileMenuClose}>
+          <div>
+            <MenuItem onClick={() => {
+              navigate('/profile');
+              handleProfileMenuClose();
+            }}>
+              <ListItemIcon>
+                <Person fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Profile" />
+            </MenuItem>
+            <MenuItem onClick={() => {
+              handleLogout();
+              handleProfileMenuClose();
+            }}>
+              <ListItemIcon>
+                <ExitToApp fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </MenuItem>
+          </div>
+        </ClickAwayListener>
       </Menu>
 
       <Drawer
