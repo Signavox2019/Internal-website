@@ -83,6 +83,9 @@ const LoginPage = () => {
       localStorage.setItem('isAdmin', response.data.employee.isAdmin);
       localStorage.setItem('userData', JSON.stringify(response.data.employee));
 
+      // Notify app of auth state change
+      window.dispatchEvent(new Event('auth-changed'));
+
       // Show success toast
       toast.success(`Welcome back, ${response.data.employee.name}!`, {
         position: "top-right",

@@ -36,7 +36,13 @@ const theme = createTheme({
 });
 
 function App() {
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const parseIsAdmin = () => {
+    const raw = localStorage.getItem('isAdmin');
+    if (raw == null) return false;
+    const normalized = String(raw).trim().toLowerCase().replace(/^\"|\"$/g, '');
+    return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'y';
+  };
+  const [isAdmin, setIsAdmin] = useState(parseIsAdmin());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,6 +52,16 @@ function App() {
     }, 3000);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleAuthChanged = () => setIsAdmin(parseIsAdmin());
+    window.addEventListener('auth-changed', handleAuthChanged);
+    window.addEventListener('storage', handleAuthChanged);
+    return () => {
+      window.removeEventListener('auth-changed', handleAuthChanged);
+      window.removeEventListener('storage', handleAuthChanged);
+    };
   }, []);
 
   if (loading) {
@@ -152,7 +168,7 @@ function App() {
           {/* Redirect root to login or welcome based on auth status */}
           <Route path="/" element={
             localStorage.getItem('token')
-              ? (localStorage.getItem('isAdmin') === 'true'
+              ? (isAdmin
                 ? <Navigate to="/welcome" replace />
                 : <Navigate to="/landing" replace />)
               : <Navigate to="/login" replace />
