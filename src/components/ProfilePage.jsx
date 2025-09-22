@@ -158,6 +158,9 @@ const ProfilePage = () => {
     const handleCancel = () => {
         setEditedProfile(profile);
         setIsEditing(false);
+        // Clear any image preview when canceling
+        setImagePreview(null);
+        setProfileImage(null);
     };
 
     const handleSave = async () => {
@@ -174,6 +177,9 @@ const ProfilePage = () => {
             const employee = response?.data?.data || response?.data?.employee || response?.data;
             setProfile(employee);
             setIsEditing(false);
+            // Clear image preview and file after successful save
+            setImagePreview(null);
+            setProfileImage(null);
             toast.success('Profile updated successfully!');
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -207,17 +213,9 @@ const ProfilePage = () => {
             reader.readAsDataURL(file);
             setProfileImage(file);
 
-            // Get user data from localStorage
-            const userData = JSON.parse(localStorage.getItem('userData'));
-            if (!userData || !userData._id) {
-                toast.error('User data not found');
-                return;
-            }
-
             // Upload image
             const formData = new FormData();
             formData.append('image', file);
-            formData.append('_id', userData._id);
 
             try {
                 const response = await axios.put(
@@ -228,15 +226,30 @@ const ProfilePage = () => {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'multipart/form-data'
                         }
-                    },
+                    }
                 );
 
                 if (response.data) {
-                    setProfile(response.data);
+                    // Update profile with new image URL
+                    const updatedProfile = { ...profile, profileImage: response.data.profileImage };
+                    setProfile(updatedProfile);
+                    
+                    // Also update editedProfile to include the new image URL
+                    setEditedProfile(prev => ({
+                        ...prev,
+                        profileImage: response.data.profileImage
+                    }));
+                    
                     // Update userData in localStorage with new profile image
-                    const updatedUserData = { ...userData, profileImage: response.data.profileImage };
-                    localStorage.setItem('userData', JSON.stringify(updatedUserData));
-                    toast.success('Profile image updated successfully!');
+                    const userData = JSON.parse(localStorage.getItem('userData'));
+                    if (userData) {
+                        const updatedUserData = { ...userData, profileImage: response.data.profileImage };
+                        localStorage.setItem('userData', JSON.stringify(updatedUserData));
+                    }
+                    
+                    toast.success(response.data.message || 'Profile image updated successfully!');
+                    // Clear preview since image is now uploaded
+                    setImagePreview(null);
                 }
             } catch (error) {
                 console.error('Error updating profile image:', error);
@@ -297,20 +310,20 @@ const ProfilePage = () => {
                         }}
                     />
 
-                    <Box sx={{ px: { xs: 2, sm: 4, md: 6 }, pb: 4, mt: -10 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
+                    <Box sx={{ px: { xs: 1, sm: 3, md: 4, lg: 6 }, pb: { xs: 2, sm: 3, md: 4 }, mt: -10 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: { xs: 2, sm: 3, md: 4 } }}>
                             <Box sx={{ position: 'relative' }}>
                                 <Avatar
                                     src={imagePreview || profile?.profileImage}
                                     onClick={handleAvatarClick}
                                     sx={{
-                                        width: 180,
-                                        height: 180,
-                                        border: '4px solid white',
+                                        width: { xs: 120, sm: 150, md: 180 },
+                                        height: { xs: 120, sm: 150, md: 180 },
+                                        border: { xs: '3px solid white', sm: '4px solid white' },
                                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-                                        mb: 2,
+                                        mb: { xs: 1, sm: 2 },
                                         borderColor: 'white',
-                                        fontSize: 70,
+                                        fontSize: { xs: 50, sm: 60, md: 70 },
                                         transition: 'all 0.3s ease',
                                         cursor: 'pointer',
                                         '&:hover': {
@@ -339,21 +352,21 @@ const ProfilePage = () => {
                                         htmlFor="profile-image-input"
                                         sx={{
                                             position: 'absolute',
-                                            bottom: 20,
+                                            bottom: { xs: 10, sm: 15, md: 20 },
                                             right: 0,
                                             bgcolor: 'primary.main',
                                             borderRadius: '50%',
-                                            width: 40,
-                                            height: 40,
+                                            width: { xs: 32, sm: 36, md: 40 },
+                                            height: { xs: 32, sm: 36, md: 40 },
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             cursor: 'pointer',
-                                            border: '2px solid white',
+                                            border: { xs: '1px solid white', sm: '2px solid white' },
                                             '&:hover': { bgcolor: 'primary.dark' },
                                         }}
                                     >
-                                        <CameraIcon sx={{ color: 'white' }} />
+                                        <CameraIcon sx={{ color: 'white', fontSize: { xs: 16, sm: 18, md: 20 } }} />
                                         <input
                                             ref={fileInputRef}
                                             type="file"
@@ -370,12 +383,12 @@ const ProfilePage = () => {
                                 variant="h4"
                                 sx={{
                                     fontWeight: 'bold',
-                                    // background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
                                     background:'#311188',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                     textAlign: 'center',
                                     mb: 1,
+                                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
                                 }}
                             >
                                 {profile?.name}
@@ -402,28 +415,33 @@ const ProfilePage = () => {
                                     startIcon={<EditIcon />}
                                     onClick={handleEdit}
                                     sx={{
-                                        mt: 3,
+                                        mt: { xs: 2, sm: 3 },
                                         borderRadius: '12px',
-                                        // background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
                                         background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
-
                                         boxShadow: '0 4px 15px rgba(79, 70, 229, 0.4)',
+                                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                                        px: { xs: 2, sm: 3 },
+                                        py: { xs: 1, sm: 1.5 },
                                         '&:hover': {
-                                            // background: 'linear-gradient(135deg, #4338ca 0%, #2563eb 100%)',
                                             background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
-
                                         }
                                     }}
                                 >
                                     Edit Profile
                                 </Button>
                             ) : (
-                                <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                                <Box sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, mt: { xs: 2, sm: 3 }, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center' }}>
                                     <Button
                                         variant="outlined"
                                         startIcon={<CancelIcon />}
                                         onClick={handleCancel}
-                                        sx={{ borderRadius: '12px' }}
+                                        sx={{ 
+                                            borderRadius: '12px',
+                                            fontSize: { xs: '0.875rem', sm: '1rem' },
+                                            px: { xs: 2, sm: 3 },
+                                            py: { xs: 1, sm: 1.5 },
+                                            width: { xs: '100%', sm: 'auto' }
+                                        }}
                                     >
                                         Cancel
                                     </Button>
@@ -433,11 +451,13 @@ const ProfilePage = () => {
                                         onClick={handleSave}
                                         sx={{
                                             borderRadius: '12px',
-                                            // background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
                                             background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
                                             boxShadow: '0 4px 15px rgba(79, 70, 229, 0.4)',
+                                            fontSize: { xs: '0.875rem', sm: '1rem' },
+                                            px: { xs: 2, sm: 3 },
+                                            py: { xs: 1, sm: 1.5 },
+                                            width: { xs: '100%', sm: 'auto' },
                                             '&:hover': {
-                                                // background: 'linear-gradient(135deg, #4338ca 0%, #2563eb 100%)',
                                                 background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
                                             }
                                         }}
@@ -448,9 +468,9 @@ const ProfilePage = () => {
                             )}
                         </Box>
 
-                        <Divider sx={{ my: 4 }} />
+                        <Divider sx={{ my: { xs: 2, sm: 3, md: 4 } }} />
 
-                        <Grid container spacing={8}
+                        <Grid container spacing={{ xs: 2, sm: 3, md: 4, lg: 6 }}
                             sx={{
                                 display: 'flex',
                                 justifyContent: 'center',
@@ -458,7 +478,7 @@ const ProfilePage = () => {
                                 width: '100%'
                             }}
                         >
-                            <Grid item xs={12} md={6}>
+                            <Grid item xs={12} sm={12} md={6} lg={6}>
                                 <motion.div
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -467,26 +487,28 @@ const ProfilePage = () => {
                                     <Paper
                                         elevation={0}
                                         sx={{
-                                            width: '450px',
-                                            p: 4,
+                                            width: { xs: '100%', sm: '100%', md: '100%', lg: '450px' },
+                                            maxWidth: { xs: '100%', sm: '500px', md: '450px', lg: '450px' },
+                                            p: { xs: 2, sm: 3, md: 4 },
                                             height: '100%',
                                             background: 'linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4))',
-                                            borderRadius: '20px',
+                                            borderRadius: { xs: '15px', sm: '18px', md: '20px' },
                                             backdropFilter: 'blur(10px)',
                                             border: '1px solid rgba(255,255,255,0.3)',
                                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                                            mx: { xs: 'auto', sm: 'auto', md: 0 },
                                         }}
                                     >
                                         <Typography
                                             variant="h6"
-
                                             sx={{
                                                 fontWeight: 700,
                                                 color: '#1f2937',
-                                                mb: 4,
+                                                mb: { xs: 2, sm: 3, md: 4 },
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: 2,
+                                                fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
                                                 '&::after': {
                                                     content: '""',
                                                     flex: 1,
@@ -495,17 +517,17 @@ const ProfilePage = () => {
                                                 }
                                             }}
                                         >
-                                            <PersonIcon sx={{ color: '#4f46e5', fontSize: 28 }} />
+                                            <PersonIcon sx={{ color: '#4f46e5', fontSize: { xs: 24, sm: 26, md: 28 } }} />
                                             Personal Information
                                         </Typography>
                                         <Box sx={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: 3,
+                                            gap: { xs: 2, sm: 2.5, md: 3 },
                                             '& .MuiTextField-root': {
                                                 transition: 'all 0.3s ease',
                                                 '&:hover': {
-                                                    transform: 'translateX(8px)'
+                                                    transform: { xs: 'none', sm: 'translateX(4px)', md: 'translateX(8px)' }
                                                 }
                                             }
                                         }}>
@@ -563,7 +585,7 @@ const ProfilePage = () => {
                                     </Paper>
                                 </motion.div>
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid item xs={12} sm={12} md={6} lg={6}>
                                 <motion.div
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -572,14 +594,16 @@ const ProfilePage = () => {
                                     <Paper
                                         elevation={0}
                                         sx={{
-                                            width: '450px',
-                                            p: 4,
+                                            width: { xs: '100%', sm: '100%', md: '100%', lg: '450px' },
+                                            maxWidth: { xs: '100%', sm: '500px', md: '450px', lg: '450px' },
+                                            p: { xs: 2, sm: 3, md: 4 },
                                             height: '100%',
                                             background: 'linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4))',
-                                            borderRadius: '20px',
+                                            borderRadius: { xs: '15px', sm: '18px', md: '20px' },
                                             backdropFilter: 'blur(10px)',
                                             border: '1px solid rgba(255,255,255,0.3)',
                                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                                            mx: { xs: 'auto', sm: 'auto', md: 0 },
                                         }}
                                     >
                                         <Typography
@@ -587,10 +611,11 @@ const ProfilePage = () => {
                                             sx={{
                                                 fontWeight: 700,
                                                 color: '#1f2937',
-                                                mb: 4,
+                                                mb: { xs: 2, sm: 3, md: 4 },
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: 2,
+                                                fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
                                                 '&::after': {
                                                     content: '""',
                                                     flex: 1,
@@ -599,17 +624,17 @@ const ProfilePage = () => {
                                                 }
                                             }}
                                         >
-                                            <WorkIcon sx={{ color: '#4f46e5', fontSize: 28 }} />
+                                            <WorkIcon sx={{ color: '#4f46e5', fontSize: { xs: 24, sm: 26, md: 28 } }} />
                                             Work Information
                                         </Typography>
                                         <Box sx={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: 3,
+                                            gap: { xs: 2, sm: 2.5, md: 3 },
                                             '& .MuiFormControl-root': {
                                                 transition: 'all 0.3s ease',
                                                 '&:hover': {
-                                                    transform: 'translateX(8px)'
+                                                    transform: { xs: 'none', sm: 'translateX(4px)', md: 'translateX(8px)' }
                                                 }
                                             }
                                         }}>
