@@ -180,6 +180,9 @@ const EmployeesPage = () => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [viewOpen, setViewOpen] = useState(false);
+    const [viewLoading, setViewLoading] = useState(false);
+    const [viewEmployee, setViewEmployee] = useState(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -243,6 +246,23 @@ const EmployeesPage = () => {
             _id: employee._id
         });
         setOpenDialog(true);
+    };
+
+    const handleViewEmployee = async () => {
+        setViewOpen(true);
+        setViewLoading(true);
+        setViewEmployee(null);
+        try {
+            const response = await axios.get(`${BaseUrl}/employees/6837fcedaa1ce7c5ce6c82ff`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setViewEmployee(response.data);
+        } catch (error) {
+            console.error('Error fetching employee details:', error);
+            toast.error('Failed to fetch employee details');
+        } finally {
+            setViewLoading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -454,6 +474,23 @@ const EmployeesPage = () => {
 
     const CardActions = ({ employee }) => (
         <Box sx={{ display: 'flex', gap: 1, width: '100%', justifyContent: 'flex-end' }}>
+            <IconButton
+                size="small"
+                sx={{
+                    bgcolor: 'background.paper',
+                    '&:hover': {
+                        bgcolor: alpha('#fff', 0.9),
+                        transform: 'scale(1.1)',
+                    },
+                    transition: 'all 0.2s ease-in-out',
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewEmployee();
+                }}
+            >
+                <Visibility fontSize="small" />
+            </IconButton>
             <IconButton
                 size="small"
                 sx={{
@@ -1106,6 +1143,135 @@ const EmployeesPage = () => {
                         >
                             {isEditMode ? 'Save Changes' : 'Register Employee'}
                         </LoadingButton>
+                    </DialogActions>
+                </StyledDialog>
+
+                {/* View Employee Details Modal */}
+                <StyledDialog
+                    open={viewOpen}
+                    onClose={() => setViewOpen(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 3,
+                            bgcolor: 'background.paper',
+                            backgroundImage: 'linear-gradient(135deg, rgba(43, 90, 158, 0.05) 0%, rgba(217, 118, 74, 0.05) 100%)',
+                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        }
+                    }}
+                >
+                    {/* Header Hero Section */}
+                    <Box
+                        sx={{
+                            position: 'relative',
+                            background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
+                            color: 'white',
+                            px: 3,
+                            pt: 3,
+                            pb: 2.5,
+                        }}
+                    >
+                        <IconButton
+                            onClick={() => setViewOpen(false)}
+                            sx={{
+                                position: 'absolute',
+                                top: 8,
+                                right: 8,
+                                color: 'white',
+                                bgcolor: 'rgba(255,255,255,0.12)',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' }
+                            }}
+                        >
+                            <Close />
+                        </IconButton>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar src={viewEmployee?.profileImage} sx={{ width: 56, height: 56, bgcolor: 'white', color: '#311188', fontWeight: 700 }}>
+                                {viewEmployee?.name?.charAt(0) || '?'}
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                                    {viewEmployee?.name || 'Employee'}
+                                </Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                    {viewEmployee?.email || ''}
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        {/* Key info chips */}
+                        <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {viewEmployee?.employeeId && (
+                                <Chip label={`ID: ${viewEmployee.employeeId}`} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white' }} />
+                            )}
+                            {viewEmployee?.role && (
+                                <Chip label={viewEmployee.role} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white' }} />
+                            )}
+                            {viewEmployee?.team && (
+                                <Chip label={viewEmployee.team} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white' }} />
+                            )}
+                            {viewEmployee?.status && (
+                                <Chip label={viewEmployee.status} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white' }} />
+                            )}
+                        </Box>
+                    </Box>
+                    <DialogContent sx={{ p: 3 }}>
+                        {viewLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : viewEmployee ? (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Avatar src={viewEmployee.profileImage} sx={{ width: 56, height: 56 }}>
+                                        {viewEmployee?.name?.charAt(0) || '?'}
+                                    </Avatar>
+                                    <Box>
+                                        <Typography variant="h6">{viewEmployee.name}</Typography>
+                                        <Typography variant="body2" color="text.secondary">{viewEmployee.email}</Typography>
+                                    </Box>
+                                </Box>
+
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="body2"><strong>Gender:</strong> {viewEmployee.gender}</Typography>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="body2"><strong>Blood Group:</strong> {viewEmployee.bloodGroup}</Typography>
+                                    </Grid>
+                                    {viewEmployee.experience && (
+                                        <Grid item xs={12}>
+                                            <Typography variant="body2"><strong>Experience:</strong> {viewEmployee.experience}</Typography>
+                                        </Grid>
+                                    )}
+                                </Grid>
+
+                                {Array.isArray(viewEmployee.skills) && viewEmployee.skills.length > 0 && (
+                                    <Box>
+                                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Skills</Typography>
+                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                            {viewEmployee.skills.map((s, idx) => (
+                                                <Chip key={idx} label={`${s.name} (${s.level})`} size="small" />
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                )}
+
+                                {viewEmployee.currentProject && (
+                                    <Box>
+                                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Current Project</Typography>
+                                        <Typography variant="body2">{viewEmployee.currentProject.title} ({viewEmployee.currentProject.projectId})</Typography>
+                                    </Box>
+                                )}
+                            </Box>
+                        ) : (
+                            <Typography variant="body2">No details available.</Typography>
+                        )}
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3, pt: 2 }}>
+                        <Button onClick={() => setViewOpen(false)} variant="outlined">Close</Button>
                     </DialogActions>
                 </StyledDialog>
 

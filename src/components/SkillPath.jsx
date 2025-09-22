@@ -325,10 +325,8 @@ const SkillPath = () => {
                 bloodGroup: editForm.bloodGroup || undefined,
             };
 
-            const targetId = '6837fcedaa1ce7c5ce6c82ff';
-
             const response = await axios.put(
-                `${BaseUrl}/employees/update-professional/${targetId}`,
+                `${BaseUrl}/employees/update-professional`,
                 payload,
                 {
                     headers: {
@@ -1723,7 +1721,7 @@ const SkillPath = () => {
                                 </Box>
                                 <IconButton
                                     onClick={() => setDetailModalOpen(false)}
-                                    sx={{ color: 'white' }}
+                                    sx={{ color: 'white', cursor: 'pointer', pointerEvents: 'auto', zIndex: 2 }}
                                 >
                                     <Close />
                                 </IconButton>
