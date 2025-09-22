@@ -191,8 +191,27 @@ const SkillPath = () => {
     const [selectedCertificate, setSelectedCertificate] = useState(null);
     const [certModalOpen, setCertModalOpen] = useState(false);
 
+    // Safely format dates to avoid rendering errors when values are missing/invalid
+    const safeFormat = (dateInput, formatString) => {
+        try {
+            if (!dateInput) return '—';
+            const parsed = new Date(dateInput);
+            if (Number.isNaN(parsed.getTime())) return '—';
+            return format(parsed, formatString);
+        } catch {
+            return '—';
+        }
+    };
+
     const token = localStorage.getItem('token');
-    const isAdmin = JSON.parse(localStorage.getItem('userData'))?.isAdmin;
+    const localUser = (() => {
+        try {
+            return JSON.parse(localStorage.getItem('userData') || '{}') || {};
+        } catch {
+            return {};
+        }
+    })();
+    const isAdmin = localUser?.isAdmin;
 
     useEffect(() => {
         try {
@@ -212,11 +231,18 @@ const SkillPath = () => {
             setLoading(true);
             const headers = { 'Authorization': `Bearer ${token}` };
 
-            // Fetch employee profile with updated response format
+            // Fetch employee profile (success + data shape)
             const profileResponse = await axios.get(`${BaseUrl}/employees/profile`, { headers });
-            
-            // Update employeeData with the employee object from response
-            setEmployeeData(profileResponse.data.employee);
+
+            // Update employeeData; ensure arrays exist
+            const emp = profileResponse?.data?.data || {};
+            setEmployeeData({
+                ...emp,
+                skills: emp.skills || [],
+                previousCompanies: emp.previousCompanies || [],
+                previousProjects: emp.previousProjects || [],
+                certifications: emp.certifications || []
+            });
 
             // If admin, fetch all employees
             if (isAdmin) {
@@ -248,16 +274,62 @@ const SkillPath = () => {
             // console.log('Employee ID:', employeeData._id);
             // console.log('Update URL:', `${BaseUrl}/employee/update-professional/${employeeData._id}`);
 
+            // Normalize payload to server schema
+            const normalizeDate = (value) => {
+                if (!value) return undefined;
+                try {
+                    const d = new Date(value);
+                    if (Number.isNaN(d.getTime())) return value;
+                    return d.toISOString();
+                } catch {
+                    return value;
+                }
+            };
+
+            const payload = {
+                skills: (editForm.skills || []).map(s => ({
+                    name: s.name || '',
+                    level: s.level || 'Beginner',
+                    endorsedBy: Array.isArray(s.endorsedBy) ? s.endorsedBy : []
+                })),
+                experience: editForm.experience || '',
+                previousCompanies: (editForm.previousCompanies || []).map(c => ({
+                    companyName: c.companyName || '',
+                    role: c.role || '',
+                    startDate: normalizeDate(c.startDate),
+                    endDate: normalizeDate(c.endDate),
+                    reasonForLeaving: c.reasonForLeaving || undefined,
+                    relievingLetterUrl: c.relievingLetterUrl || undefined,
+                    location: c.location || undefined,
+                    technologiesUsed: Array.isArray(c.technologiesUsed) ? c.technologiesUsed : (c.technologiesUsed ? String(c.technologiesUsed).split(',').map(t => t.trim()).filter(Boolean) : [])
+                })),
+                previousProjects: (editForm.previousProjects || []).map(p => ({
+                    projectName: p.projectName || '',
+                    client: p.client || '',
+                    role: p.role || undefined,
+                    description: p.description || '',
+                    technologiesUsed: Array.isArray(p.technologiesUsed) ? p.technologiesUsed : (p.technologiesUsed ? String(p.technologiesUsed).split(',').map(t => t.trim()).filter(Boolean) : []),
+                    startDate: normalizeDate(p.startDate),
+                    endDate: normalizeDate(p.endDate),
+                    duration: p.duration || undefined,
+                    projectUrl: p.projectUrl || undefined,
+                    teamSize: typeof p.teamSize === 'number' ? p.teamSize : (p.teamSize ? parseInt(p.teamSize, 10) : undefined),
+                    responsibilities: Array.isArray(p.responsibilities) ? p.responsibilities : (p.responsibilities ? String(p.responsibilities).split(',').map(r => r.trim()).filter(Boolean) : [])
+                })),
+                certifications: (editForm.certifications || []).map(cert => ({
+                    name: cert.name || '',
+                    issuer: cert.issuer || '',
+                    issueDate: normalizeDate(cert.issueDate),
+                    certificateUrl: cert.certificateUrl || undefined
+                })),
+                bloodGroup: editForm.bloodGroup || undefined,
+            };
+
+            const targetId = '6837fcedaa1ce7c5ce6c82ff';
+
             const response = await axios.put(
-                `${BaseUrl}/employees/update-professional/${employeeData._id}`,  // Updated endpoint
-                {
-                    skills: editForm.skills,
-                    experience: editForm.experience,
-                    bloodGroup: editForm.bloodGroup,
-                    previousCompanies: editForm.previousCompanies,
-                    previousProjects: editForm.previousProjects,
-                    certifications: editForm.certifications
-                },
+                `${BaseUrl}/employees/update-professional/${targetId}`,
+                payload,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -354,10 +426,19 @@ const SkillPath = () => {
         try {
             setLoadingEmployee(true);
             setEmployeeError(null);
-            const token = localStorage.getItem('token');
+            const headers = { 'Authorization': `Bearer ${token}` };
 
-            // Since we already have all the employee data, we can just set it directly
-            setSelectedEmployee(employee);
+            // Fetch latest details by id to ensure full data
+            const id = employee?._id || '6837fcedaa1ce7c5ce6c82ff';
+            const res = await axios.get(`${BaseUrl}/employees/${id}`, { headers });
+            const emp = res.data || employee;
+            setSelectedEmployee({
+                ...emp,
+                skills: emp.skills || [],
+                previousCompanies: emp.previousCompanies || [],
+                previousProjects: emp.previousProjects || [],
+                certifications: emp.certifications || []
+            });
             setDetailModalOpen(true);
         } catch (error) {
             console.error('Error fetching employee details:', error);
@@ -583,23 +664,23 @@ const SkillPath = () => {
                                         border: '4px solid rgba(255,255,255,0.2)'
                                     }}
                                 >
-                                    {employeeData?.name?.charAt(0)}
+                                    {(employeeData?.name || localUser?.name || '—')?.charAt(0)}
                                 </StyledAvatar>
                                 <Box sx={{ flex: 1 }}>
                                     <Typography variant="h3" gutterBottom fontWeight="bold">
-                                        {employeeData?.name || 'Loading...'}
+                                        {employeeData?.name || localUser?.name || '—'}
                                     </Typography>
                                     <Typography variant="h5" sx={{ opacity: 0.9 }}>
-                                        {employeeData?.role} • {employeeData?.team}
+                                        {(employeeData?.role || localUser?.role || '—')} • {(employeeData?.team || localUser?.team || '—')}
                                     </Typography>
                                     <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
                                         <Chip
-                                            label={employeeData?.employeeId}
+                                            label={employeeData?.employeeId || localUser?.employeeId || '—'}
                                             icon={<Person />}
                                             sx={{ background: 'rgba(255,255,255,0.1)' }}
                                         />
                                         <Chip
-                                            label={employeeData?.status}
+                                            label={employeeData?.status || localUser?.status || '—'}
                                             icon={<Work />}
                                             sx={{ background: 'rgba(255,255,255,0.1)' }}
                                         />
@@ -662,6 +743,11 @@ const SkillPath = () => {
                                 Skills & Expertise
                             </SectionTitle>
                             <SkillsGrid>
+                                {(!employeeData?.skills || employeeData?.skills?.length === 0) && (
+                                    <Typography variant="body2" color="text.secondary">
+                                        No skills added yet
+                                    </Typography>
+                                )}
                                 {employeeData?.skills?.map((skill, index) => (
                                     <motion.div
                                         key={index}
@@ -722,6 +808,11 @@ const SkillPath = () => {
                                 }} />
 
                                 <CustomTimeline>
+                                    {(!employeeData?.previousCompanies || employeeData?.previousCompanies?.length === 0) && (
+                                        <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
+                                            No work experience added yet
+                                        </Typography>
+                                    )}
                                     {employeeData?.previousCompanies?.map((company, index) => (
                                         <CustomTimelineItem key={index} index={index}>
                                             <CustomTimelineDot />
@@ -746,7 +837,7 @@ const SkillPath = () => {
                                                             gap: 0.5
                                                         }}>
                                                             <CalendarToday sx={{ fontSize: 16 }} />
-                                                            {format(new Date(company.startDate), 'MMM yyyy')} - {format(new Date(company.endDate), 'MMM yyyy')}
+                                                            {safeFormat(company.startDate, 'MMM yyyy')} - {safeFormat(company.endDate, 'MMM yyyy')}
                                                         </Typography>
                                                         {company.location && (
                                                             <Typography variant="body2" color="text.secondary" sx={{
@@ -794,6 +885,11 @@ const SkillPath = () => {
                                 gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
                                 gap: 4,
                             }}>
+                                {(!employeeData?.previousProjects || employeeData?.previousProjects?.length === 0) && (
+                                    <Typography variant="body2" color="text.secondary">
+                                        No projects added yet
+                                    </Typography>
+                                )}
                                 {employeeData?.previousProjects?.map((project, index) => (
                                     <motion.div
                                         key={index}
@@ -843,6 +939,11 @@ const SkillPath = () => {
                                 mt: 4,
                                 px: { xs: 2, sm: 0 }
                             }}>
+                                {(!employeeData?.certifications || employeeData?.certifications?.length === 0) && (
+                                    <Typography variant="body2" color="text.secondary">
+                                        No certifications added yet
+                                    </Typography>
+                                )}
                                 {employeeData?.certifications?.map((cert, index) => (
                                     <motion.div
                                         key={index}
@@ -938,7 +1039,7 @@ const SkillPath = () => {
                                                 >
                                                     <CalendarToday sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
                                                     <Typography variant="caption" color="text.secondary">
-                                                        {format(new Date(cert.issueDate), 'MMM yyyy')}
+                                                        {safeFormat(cert.issueDate, 'MMM yyyy')}
                                                     </Typography>
                                                 </Box>
                                                 <Button
@@ -1689,7 +1790,7 @@ const SkillPath = () => {
                                                     Experience
                                                 </Typography>
                                                 <Typography variant="h6">
-                                                    {selectedEmployee.experience || '0 years'}
+                                                    {selectedEmployee.experience || '—'}
                                                 </Typography>
                                             </Box>
                                             <Box>
@@ -1850,7 +1951,7 @@ const SkillPath = () => {
                                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
                                                                 <Typography variant="caption" color="text.secondary">
                                                                     <CalendarToday sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
-                                                                    {format(new Date(cert.issueDate), 'MMM yyyy')}
+                                                                    {safeFormat(cert.issueDate, 'MMM yyyy')}
                                                                 </Typography>
                                                                 {cert.certificateUrl && (
                                                                     <Button
@@ -1948,7 +2049,7 @@ const SkillPath = () => {
                                                 Issue Date
                                             </Typography>
                                             <Typography variant="body1" fontWeight="500">
-                                                {format(new Date(selectedCertificate.issueDate), 'MMMM dd, yyyy')}
+                                                {safeFormat(selectedCertificate.issueDate, 'MMMM dd, yyyy')}
                                             </Typography>
                                         </Box>
                                     </Box>
