@@ -580,18 +580,24 @@ const QuickLinksPage = () => {
           </Grid>
 
           {/* Pagination & Controls */}
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 2,
-            mt: 'auto',
-            pt: 4,
-            borderTop: '1px solid rgba(0,0,0,0.08)'
-          }}>
+          <Paper
+            elevation={0}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2,
+              mt: 'auto',
+              pt: 4,
+              borderTop: '1px solid rgba(0,0,0,0.06)',
+              background: 'transparent',
+              p: 2,
+              borderRadius: 2
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <FormControl size="small" sx={{ minWidth: 140 }}>
+              <FormControl size="small" sx={{ minWidth: 160 }}>
                 <InputLabel id="rows-per-page-label">Links per page</InputLabel>
                 <Select
                   labelId="rows-per-page-label"
@@ -599,6 +605,10 @@ const QuickLinksPage = () => {
                   value={rowsPerPage}
                   label="Links per page"
                   onChange={(e) => handleChangeRowsPerPage(e.target.value)}
+                  sx={{
+                    borderRadius: 2,
+                    '& .MuiSelect-select': { py: 1.2 },
+                  }}
                 >
                   <MenuItem value={6}>6</MenuItem>
                   <MenuItem value={12}>12</MenuItem>
@@ -610,26 +620,49 @@ const QuickLinksPage = () => {
                 Showing {displayedLinks.length === 0 ? 0 : startIndex + 1}–{Math.min(endIndex, displayedLinks.length)} of {displayedLinks.length}
               </Typography>
             </Box>
-            <Pagination
-              count={pageCount}
-              page={page}
-              onChange={(e, value) => setPage(value)}
-              color="primary"
-              size="medium"
-              showFirstButton
-              showLastButton
-              siblingCount={1}
-              boundaryCount={1}
-              variant="outlined"
-              shape="rounded"
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  borderRadius: '10px',
-                  borderColor: 'rgba(99, 102, 241, 0.3)'
-                }
-              }}
-            />
-          </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                Page {page} of {pageCount}
+              </Typography>
+              <Pagination
+                count={pageCount}
+                page={page}
+                onChange={(e, value) => setPage(value)}
+                color="primary"
+                size="medium"
+                siblingCount={1}
+                boundaryCount={1}
+                variant="outlined"
+                shape="rounded"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    borderRadius: '12px',
+                    borderColor: 'rgba(99, 102, 241, 0.25)',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 6px 16px rgba(59,130,246,0.15)'
+                    }
+                  },
+                  '& .Mui-selected': {
+                    color: '#fff',
+                    background: 'linear-gradient(135deg, #311188 0%, #0A081E 100%)',
+                    borderColor: 'transparent',
+                    boxShadow: '0 8px 18px rgba(17, 24, 39, 0.25)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #0A081E 0%, #311188 100%)',
+                      transform: 'translateY(-1px)'
+                    }
+                  },
+                  '& .MuiPaginationItem-ellipsis': {
+                    mx: 1,
+                    color: 'text.secondary'
+                  }
+                }}
+              />
+            </Box>
+          </Paper>
         </Box>
 
         {/* Enhanced Dialog - Only show for admin users */}
