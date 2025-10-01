@@ -23,8 +23,6 @@ import CommunityConnect from './components/CommunityConnect';
 import AdminAssignments from './components/AdminAssignments';
 import UserAssignments from './components/UserAssignments';
 import ExamPage from './components/ExamPage';
-import BlogsPage from './components/BlogsPage';
-import BlogDetails from './components/BlogDetails';
 
 const theme = createTheme({
   palette: {
@@ -38,62 +36,14 @@ const theme = createTheme({
 });
 
 function App() {
-  // Robust admin detection: localStorage flag, JWT claims, or userData.role
-  const getIsAdmin = () => {
-    try {
-      if (localStorage.getItem('isAdmin') === 'true') return true;
-      const token = localStorage.getItem('token');
-      if (token) {
-        const parts = token.split('.');
-        if (parts.length >= 2) {
-          try {
-            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-            const claimIsAdmin = !!(payload.isAdmin || payload.admin || (Array.isArray(payload.roles) && payload.roles.includes('admin')));
-            const claimRole = (payload.role || payload.user?.role || '').toString().toLowerCase();
-            if (claimIsAdmin || ['admin','administrator','hr','manager'].includes(claimRole)) return true;
-          } catch {}
-        }
-      }
-      const userRaw = localStorage.getItem('userData');
-      if (userRaw) {
-        const user = JSON.parse(userRaw);
-        const role = (user?.role || user?.user?.role || '').toString().toLowerCase();
-        if (['admin','administrator','hr','manager'].includes(role)) return true;
-      }
-    } catch {}
-    return false;
+  const parseIsAdmin = () => {
+    const raw = localStorage.getItem('isAdmin');
+    if (raw == null) return false;
+    const normalized = String(raw).trim().toLowerCase().replace(/^\"|\"$/g, '');
+    return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'y';
   };
-
+  const [isAdmin, setIsAdmin] = useState(parseIsAdmin());
   const [loading, setLoading] = useState(true);
-
-  // Gate component ensures correct page mounts without flashing wrong one
-  const AssignmentsGate = () => {
-    const [resolved, setResolved] = useState(null);
-    useEffect(() => {
-      const sync = () => setResolved(getIsAdmin());
-      // Resolve immediately and on focus/storage changes
-      sync();
-      window.addEventListener('focus', sync);
-      window.addEventListener('storage', sync);
-      return () => {
-        window.removeEventListener('focus', sync);
-        window.removeEventListener('storage', sync);
-      };
-    }, []);
-    if (resolved === null) return null;
-    return resolved ? <AdminAssignments key="admin-assignments" /> : <UserAssignments key="user-assignments" />;
-  };
-
-  const RootRedirect = () => {
-    const [resolved, setResolved] = useState(null);
-    useEffect(() => {
-      const sync = () => setResolved(getIsAdmin());
-      sync();
-    }, []);
-    if (!localStorage.getItem('token')) return <Navigate to="/login" replace />;
-    if (resolved === null) return null;
-    return resolved ? <Navigate to="/welcome" replace /> : <Navigate to="/landing" replace />;
-  };
 
   useEffect(() => {
     // Ensure loading screen is shown for at least 3 seconds
@@ -102,6 +52,16 @@ function App() {
     }, 3000);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleAuthChanged = () => setIsAdmin(parseIsAdmin());
+    window.addEventListener('auth-changed', handleAuthChanged);
+    window.addEventListener('storage', handleAuthChanged);
+    return () => {
+      window.removeEventListener('auth-changed', handleAuthChanged);
+      window.removeEventListener('storage', handleAuthChanged);
+    };
   }, []);
 
   if (loading) {
@@ -178,14 +138,9 @@ function App() {
             } />
             <Route path="/assignments" element={
               <ProtectedRoute>
-                <AssignmentsGate />
+                {isAdmin ? <AdminAssignments /> : <UserAssignments />}
               </ProtectedRoute>
             } />
-            {/* <Route path="/admin/assignments" element={
-              <ProtectedRoute adminOnly={true}>
-                <AdminAssignments />
-              </ProtectedRoute>
-            } /> */}
             <Route path="/emergency" element={
               <ProtectedRoute>
                 <EmergencyContactPage />
@@ -201,16 +156,6 @@ function App() {
                 <SkillPath />
               </ProtectedRoute>
             } />
-            <Route path="/blogs" element={
-              <ProtectedRoute>
-                <BlogsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/blogs/:slug" element={
-              <ProtectedRoute>
-                <BlogDetails />
-              </ProtectedRoute>
-            } />
           </Route>
 
           {/* Exam route without Layout (no navbar/footer) */}
@@ -219,9 +164,15 @@ function App() {
               <ExamPage />
             </ProtectedRoute>
           } />
-
+          
           {/* Redirect root to login or welcome based on auth status */}
-          <Route path="/" element={<RootRedirect />} />
+          <Route path="/" element={
+            localStorage.getItem('token')
+              ? (isAdmin
+                ? <Navigate to="/welcome" replace />
+                : <Navigate to="/landing" replace />)
+              : <Navigate to="/login" replace />
+          } />
         </Routes>
       </Router>
     </ThemeProvider>

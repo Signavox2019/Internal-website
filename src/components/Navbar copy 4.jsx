@@ -230,8 +230,6 @@ const Navbar = () => {
       items: [
         { title: 'Community Connect', icon: <CommunityIcon />, path: '/community' },
         { title: 'Insurance', icon: <HealthAndSafety />, path: '/insurance' },
-        { title: 'Blogs', icon: <Description />, path: '/blogs' },
-
         // { title: 'Success Factor', icon: <SuccessIcon />, path: '/success-factor' },
         // { title: 'Work Zone', icon: <WorkZoneIcon />, path: '/work-zone' },
       ],
