@@ -17,6 +17,21 @@ import BaseUrl from '../Api';
 import { format } from 'date-fns';
 import LoadingScreen from './LoadingScreen';
 
+// Map heading level to sizes (match BlogsPage preview)
+const getHeadingSx = (level) => {
+  const asLower = (level || '').toLowerCase();
+  const sizeMap = {
+    h1: '3.5rem',
+    h2: '3rem',
+    h3: '2.5rem',
+    h4: '2.0rem',
+    h5: '1.5rem',
+    h6: '1.0rem',
+    h7: '0.5rem',
+  };
+  return { fontSize: sizeMap[asLower] || '1.0rem', fontWeight: 700, lineHeight: 1.3 };
+};
+
 const CoverImage = styled('img')(({ theme }) => ({
   width: '100%',
   height: 'auto',
@@ -86,6 +101,29 @@ const BlogDetails = () => {
   const [loading, setLoading] = useState(true);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const token = localStorage.getItem('token');
+  
+  // Normalize response to ensure arrays are arrays even if backend ever sends strings
+  const normalizeBlogFromApi = (data) => {
+    const parseMaybeJsonArray = (val) => {
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') {
+        try {
+          const p = JSON.parse(val);
+          return Array.isArray(p) ? p : (val ? [val] : []);
+        } catch {
+          return val ? [val] : [];
+        }
+      }
+      return [];
+    };
+    const normalized = {
+      ...data,
+      tags: parseMaybeJsonArray(data?.tags),
+      metaKeywords: parseMaybeJsonArray(data?.metaKeywords),
+      contentBlocks: Array.isArray(data?.contentBlocks) ? data.contentBlocks : [],
+    };
+    return normalized;
+  };
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -97,7 +135,7 @@ const BlogDetails = () => {
         const data = response?.data?.blog || response?.data;
         console.log('BLOG DETAILS - Received blog data:', data);
         console.log('BLOG DETAILS - Content blocks:', data?.contentBlocks);
-        setBlog(data);
+        setBlog(normalizeBlogFromApi(data));
       } catch (error) {
         console.error('Error fetching blog:', error);
       } finally {
@@ -177,12 +215,23 @@ const BlogDetails = () => {
             )}
           </Box>
           
-          {/* Tags */}
-          {blog.tags?.length > 0 && (
-            <Box display="flex" alignItems="center" gap={1.25} flexWrap="wrap" mb={3}>
-              {blog.tags.map((t, i) => (
-                <Chip key={i} label={t} size="small" variant="outlined" />
-              ))}
+          {/* Meta Keywords and Tags (distinct style) */}
+          {(blog.metaKeywords?.length > 0 || blog.tags?.length > 0) && (
+            <Box sx={{ mb: 3 }}>
+              {blog.metaKeywords?.length > 0 && (
+                <Box display="flex" alignItems="center" gap={1} flexWrap="wrap" sx={{ mb: blog.tags?.length ? 1.25 : 0 }}>
+                  {blog.metaKeywords.map((kw, i) => (
+                    <Chip key={`kw-${i}`} label={kw} size="small" color="primary" variant="outlined" />
+                  ))}
+                </Box>
+              )}
+              {blog.tags?.length > 0 && (
+                <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                  {blog.tags.map((t, i) => (
+                    <Chip key={`tag-${i}`} label={t} size="small" color="secondary" variant="outlined" />
+                  ))}
+                </Box>
+              )}
             </Box>
           )}
           
@@ -212,7 +261,7 @@ const BlogDetails = () => {
           switch (block.type) {
             case 'heading':
               return (
-                <Typography key={idx} variant="h5" fontWeight={700} sx={{ mt: idx === 0 ? 0 : 3, mb: 1.5 }}>
+                <Typography key={idx} sx={{ ...getHeadingSx(block.level), mt: idx === 0 ? 0 : 3, mb: 1.5 }}>
                   {block.content}
                 </Typography>
               );

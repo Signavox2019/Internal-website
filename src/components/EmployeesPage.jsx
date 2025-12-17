@@ -248,12 +248,13 @@ const EmployeesPage = () => {
         setOpenDialog(true);
     };
 
-    const handleViewEmployee = async () => {
+    const handleViewEmployee = async (employeeId) => {
         setViewOpen(true);
         setViewLoading(true);
         setViewEmployee(null);
+        
         try {
-            const response = await axios.get(`${BaseUrl}/employees/6837fcedaa1ce7c5ce6c82ff`, {
+            const response = await axios.get(`${BaseUrl}/employees/${employeeId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setViewEmployee(response.data);
@@ -486,7 +487,7 @@ const EmployeesPage = () => {
                 }}
                 onClick={(e) => {
                     e.stopPropagation();
-                    handleViewEmployee();
+                    handleViewEmployee(employee._id);
                 }}
             >
                 <Visibility fontSize="small" />

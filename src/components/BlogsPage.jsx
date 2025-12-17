@@ -239,6 +239,70 @@ const BlogsPage = () => {
     return null;
   };
 
+  // Normalize blog coming from API to ensure consistent types
+  const normalizeBlogFromApi = (blog) => {
+    const parseIfJsonString = (val) => {
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') {
+        try {
+          const parsed = JSON.parse(val);
+          return Array.isArray(parsed) ? parsed : val;
+        } catch {
+          return val;
+        }
+      }
+      return val ?? [];
+    };
+    // Handle legacy case: ['["a","b"]'] -> ['a','b']
+    const normalizeStringArray = (val) => {
+      let arr = parseIfJsonString(val);
+      if (Array.isArray(arr) && arr.length === 1 && typeof arr[0] === 'string') {
+        const first = arr[0].trim();
+        if (first.startsWith('[') && first.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(first);
+            if (Array.isArray(parsed)) arr = parsed;
+          } catch {}
+        }
+      }
+      if (Array.isArray(arr)) {
+        return arr
+          .filter((v) => typeof v === 'string' && v.trim().length > 0)
+          .map((v) => v.trim());
+      }
+      if (typeof arr === 'string' && arr.trim().length > 0) return [arr.trim()];
+      return [];
+    };
+    // Ensure author information is properly formatted
+    const normalizeAuthor = (author) => {
+      if (!author) return null;
+      if (typeof author === 'string') {
+        // If author is just a string, convert to object
+        return { name: author, _id: null, profileImage: null };
+      }
+      if (typeof author === 'object') {
+        // If author object exists but doesn't have name, or name is an ID, use the _id as fallback
+        if (!author.name || author.name === author._id || /^[a-f0-9]{24}$/i.test(author.name)) {
+          return { 
+            name: author._id || 'Unknown Author', 
+            _id: author._id, 
+            profileImage: author.profileImage 
+          };
+        }
+        return author;
+      }
+      return null;
+    };
+    
+    return {
+      ...blog,
+      tags: normalizeStringArray(blog?.tags),
+      metaKeywords: normalizeStringArray(blog?.metaKeywords),
+      contentBlocks: Array.isArray(blog?.contentBlocks) ? blog.contentBlocks : [],
+      author: normalizeAuthor(blog?.author),
+    };
+  };
+
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -328,11 +392,25 @@ const BlogsPage = () => {
       });
       const allBlogs = response.data.blogs || [];
       console.log('FETCH - Raw blogs from API:', allBlogs);
-      // Ensure all blogs have properly formatted contentBlocks
-      const blogsWithContentBlocks = allBlogs.map(blog => ({
-        ...blog,
-        contentBlocks: Array.isArray(blog.contentBlocks) ? blog.contentBlocks : []
-      }));
+      // Ensure all blogs have properly formatted contentBlocks and author information
+      const blogsWithContentBlocks = allBlogs.map(blog => {
+        const normalized = normalizeBlogFromApi(blog);
+        console.log('FETCH - Blog author before fix:', normalized.author);
+        console.log('FETCH - User data:', userData);
+        // Ensure author information is properly populated
+        if (!normalized.author || !normalized.author.name || /^[a-f0-9]{24}$/i.test(normalized.author.name)) {
+          // If author is missing or name is an ID, use current user data as fallback
+          const authorName = userData?.name || userData?.username || 'Current User';
+          normalized.author = userData ? { 
+            _id: userId, 
+            name: authorName, 
+            profileImage: userData.profileImage 
+          } : { name: 'Current User', _id: null, profileImage: null };
+          console.log('FETCH - Set author to user data:', normalized.author);
+        }
+        console.log('FETCH - Final author:', normalized.author);
+        return normalized;
+      });
       console.log('FETCH - Blogs with contentBlocks:', blogsWithContentBlocks);
       console.log('FETCH - Cover images:', blogsWithContentBlocks.map(b => ({ id: b._id, title: b.title, coverImage: b.coverImage })));
       console.log('FETCH - Blogs with images:', blogsWithContentBlocks.filter(b => b.coverImage));
@@ -645,12 +723,13 @@ const BlogsPage = () => {
           : (userData ? { _id: userId, name: userData.name, profileImage: userData.profileImage } : null);
         
         // Ensure contentBlocks is properly formatted
-        const contentBlocks = Array.isArray(created?.contentBlocks) && created.contentBlocks.length > 0 
-          ? created.contentBlocks 
+        const normalized = normalizeBlogFromApi(created);
+        const contentBlocks = Array.isArray(normalized?.contentBlocks) && normalized.contentBlocks.length > 0 
+          ? normalized.contentBlocks 
           : processedContentBlocks;
         
         const createdWithExtras = {
-          ...created,
+          ...normalized,
           author: populatedAuthor,
           contentBlocks: contentBlocks,
           // Preserve the File object for immediate display
@@ -771,16 +850,17 @@ const BlogsPage = () => {
           : (userData ? { _id: userId, name: userData.name, profileImage: userData.profileImage } : null);
         
         // Ensure contentBlocks is properly formatted
-        const contentBlocks = Array.isArray(updated?.contentBlocks) && updated.contentBlocks.length > 0 
-          ? updated.contentBlocks 
+        const normalized = normalizeBlogFromApi(updated);
+        const contentBlocks = Array.isArray(normalized?.contentBlocks) && normalized.contentBlocks.length > 0 
+          ? normalized.contentBlocks 
           : processedContentBlocks;
         
         const updatedWithExtras = {
-          ...updated,
+          ...normalized,
           author: populatedAuthor,
           contentBlocks: contentBlocks,
           // Prefer server URL (updated.coverImage)
-          coverImage: updated.coverImage || null
+          coverImage: normalized.coverImage || null
         };
         setBlogs(prev => prev.map(b => b._id === updatedWithExtras._id ? { ...b, ...updatedWithExtras } : b));
       }
@@ -810,33 +890,34 @@ const BlogsPage = () => {
     if (!isAdmin) {
       return;
     }
-    setEditingBlog(blog);
+    const normalizedBlog = normalizeBlogFromApi(blog);
+    setEditingBlog(normalizedBlog);
     
     // Ensure contentBlocks is properly formatted and has at least one block
-    const contentBlocks = Array.isArray(blog.contentBlocks) && blog.contentBlocks.length > 0 
-      ? blog.contentBlocks 
+    const contentBlocks = Array.isArray(normalizedBlog.contentBlocks) && normalizedBlog.contentBlocks.length > 0 
+      ? normalizedBlog.contentBlocks 
       : [{ type: 'heading', content: '', url: '', language: '', level: 'h1', order: 1 }];
     
     setFormData({
-      title: blog.title || '',
-      slug: blog.slug || '',
-      metaTitle: blog.metaTitle || '',
-      metaDescription: blog.metaDescription || '',
-      metaKeywords: blog.metaKeywords || [],
-      category: blog.category || 'Technology',
-      tags: blog.tags || [],
+      title: normalizedBlog.title || '',
+      slug: normalizedBlog.slug || '',
+      metaTitle: normalizedBlog.metaTitle || '',
+      metaDescription: normalizedBlog.metaDescription || '',
+      metaKeywords: normalizedBlog.metaKeywords || [],
+      category: normalizedBlog.category || 'Technology',
+      tags: normalizedBlog.tags || [],
       contentBlocks: contentBlocks,
-      published: blog.published || false,
-      coverImage: blog.coverImage || null
+      published: normalizedBlog.published || false,
+      coverImage: normalizedBlog.coverImage || null
     });
     
     // Set preview image properly - handle both File objects and string URLs
-    if (blog.coverImage) {
-      if (blog.coverImage instanceof File) {
-        const url = URL.createObjectURL(blog.coverImage);
+    if (normalizedBlog.coverImage) {
+      if (normalizedBlog.coverImage instanceof File) {
+        const url = URL.createObjectURL(normalizedBlog.coverImage);
         setPreviewImage(url);
-      } else if (typeof blog.coverImage === 'string') {
-        setPreviewImage(getImageUrl(blog.coverImage));
+      } else if (typeof normalizedBlog.coverImage === 'string') {
+        setPreviewImage(getImageUrl(normalizedBlog.coverImage));
       }
     } else {
       setPreviewImage('');
@@ -872,31 +953,36 @@ const BlogsPage = () => {
       showSnackbar('You do not have permission to publish blogs', 'error');
       return;
     }
+    // Optimistic update to avoid full page reload/refetch
+    const blogId = blog._id;
+    const previousState = blog.published;
+    setBlogs(prev => prev.map(b => b._id === blogId ? { ...b, published: !previousState } : b));
     try {
-      const payload = {
-        title: blog.title,
-        slug: blog.slug,
-        metaTitle: blog.metaTitle,
-        metaDescription: blog.metaDescription,
-        metaKeywords: blog.metaKeywords || [],
-        category: blog.category,
-        tags: blog.tags || [],
-        contentBlocks: Array.isArray(blog.contentBlocks) ? blog.contentBlocks : [],
-        published: !blog.published, // Toggle the published status
-      };
-      
-      const response = await axios.put(`${BaseUrl}/blogs/${blog._id}`, payload, {
+      // Use PATCH endpoint for toggle
+      const response = await axios.patch(`${BaseUrl}/blogs/${blogId}/toggle`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
       
-      const updated = response.data;
-      await fetchBlogs();
-      showSnackbar(updated.published ? 'Blog published' : 'Blog moved to draft');
+      // Ensure author name is properly displayed
+      const serverUpdated = response.data;
+      const populatedAuthor = serverUpdated?.author && typeof serverUpdated.author === 'object' && serverUpdated.author?.name
+        ? serverUpdated.author
+        : (userData ? { _id: userId, name: userData.name, profileImage: userData.profileImage } : null);
+      
+      const updatedBlog = {
+        ...serverUpdated,
+        author: populatedAuthor
+      };
+      
+      setBlogs(prev => prev.map(b => b._id === blogId ? { ...b, ...updatedBlog } : b));
+      showSnackbar(updatedBlog.published ? 'Blog published' : 'Blog moved to draft');
     } catch (error) {
       console.error('Error toggling publish:', error);
+      // Revert optimistic change
+      setBlogs(prev => prev.map(b => b._id === blogId ? { ...b, published: previousState } : b));
       showSnackbar(error.response?.data?.message || 'Failed to toggle publish', 'error');
     } finally {
       handleMenuClose();
@@ -1346,10 +1432,24 @@ const BlogsPage = () => {
                         <Avatar
                           sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
                         >
-                          {(blog.author?.name?.charAt(0) || 'A').toUpperCase()}
+                          {(() => {
+                            const authorName = blog.author?.name;
+                            // If author name is an ID (24 character hex string), use fallback
+                            if (authorName && /^[a-f0-9]{24}$/i.test(authorName)) {
+                              return (userData?.name?.charAt(0) || userData?.username?.charAt(0) || 'C').toUpperCase();
+                            }
+                            return (authorName?.charAt(0) || userData?.name?.charAt(0) || userData?.username?.charAt(0) || 'C').toUpperCase();
+                          })()}
                         </Avatar>
                         <Typography variant="caption" color="text.secondary">
-                          {blog.author?.name || 'Unknown Author'}
+                          {(() => {
+                            const authorName = blog.author?.name;
+                            // If author name is an ID (24 character hex string), use fallback
+                            if (authorName && /^[a-f0-9]{24}$/i.test(authorName)) {
+                              return userData?.name || userData?.username || 'Current User';
+                            }
+                            return authorName || userData?.name || userData?.username || 'Current User';
+                          })()}
                         </Typography>
                       </Box>
 
@@ -1372,6 +1472,30 @@ const BlogsPage = () => {
                           />
                         )}
                       </Box>
+                      {/* Meta Keywords chips (show like tags) */}
+                      {Array.isArray(blog.metaKeywords) && blog.metaKeywords.length > 0 && (
+                        <Box display="flex" flexWrap="wrap" gap={0.5} mb={1} sx={{ maxHeight: '40px', overflow: 'hidden' }}>
+                          {blog.metaKeywords.slice(0, 2).map((kw, index) => (
+                            <Chip
+                              key={index}
+                              label={kw}
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                              sx={{ borderRadius: '10px', fontSize: '0.7rem' }}
+                            />
+                          ))}
+                          {blog.metaKeywords.length > 2 && (
+                            <Chip
+                              label={`+${blog.metaKeywords.length - 2}`}
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                              sx={{ borderRadius: '10px', fontSize: '0.7rem' }}
+                            />
+                          )}
+                        </Box>
+                      )}
 
                       <Box display="flex" justifyContent="space-between" alignItems="center" mt="auto">
                         <Typography variant="caption" color="text.secondary">
